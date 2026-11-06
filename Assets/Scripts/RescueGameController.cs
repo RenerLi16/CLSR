@@ -56,6 +56,76 @@ public class RescueGameController : MonoBehaviour
         PrintCurrentState();
     }
 
+    public void AddGroupToSelectedNode()
+    {
+        RescueNode selectedNode =
+            NodeSelectionManager.Instance.SelectedNode;
+
+        if (selectedNode == null)
+        {
+            Debug.LogWarning("Select a destination first.");
+            return;
+        }
+
+        if (groupsRemaining <= 0)
+        {
+            Debug.LogWarning("No rescue groups remain today.");
+            return;
+        }
+
+        ExpeditionAssignment assignment =
+            FindAssignment(selectedNode.nodeId);
+
+        if (assignment == null)
+        {
+            assignment = new ExpeditionAssignment
+            {
+                targetNodeId = selectedNode.nodeId,
+                assignedGroups = 0
+            };
+
+            plannedAssignments.Add(assignment);
+        }
+
+        assignment.assignedGroups++;
+        groupsRemaining--;
+
+        PrintCurrentState();
+    }
+
+    public void RemoveGroupFromSelectedNode()
+    {
+        RescueNode selectedNode =
+            NodeSelectionManager.Instance.SelectedNode;
+
+        if (selectedNode == null)
+        {
+            Debug.LogWarning("Select a destination first.");
+            return;
+        }
+
+        ExpeditionAssignment assignment =
+            FindAssignment(selectedNode.nodeId);
+
+        if (assignment == null || assignment.assignedGroups <= 0)
+        {
+            Debug.LogWarning(
+                "No groups are assigned to " + selectedNode.nodeId + "."
+            );
+            return;
+        }
+
+        assignment.assignedGroups--;
+        groupsRemaining++;
+
+        if (assignment.assignedGroups == 0)
+        {
+            plannedAssignments.Remove(assignment);
+        }
+
+        PrintCurrentState();
+    }
+
 }
 
 [Serializable]
