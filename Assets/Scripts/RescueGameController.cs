@@ -34,6 +34,28 @@ public class RescueGameController : MonoBehaviour
         get { return plannedAssignments; }
     }
 
+    private void Start()
+    {
+        if (scenarioController == null)
+        {
+            scenarioController = GetComponent<ScenarioController>();
+        }
+
+        if (scenarioController == null || scenarioController.CurrentScenario == null)
+        {
+            Debug.LogError("RescueGameController requires a valid ScenarioController.");
+            enabled = false;
+            return;
+        }
+
+        currentDay = 1;
+        groupsRemaining = scenarioController.CurrentScenario.rescueGroupsPerDay;
+
+        plannedAssignments.Clear();
+
+        PrintCurrentState();
+    }
+
 }
 
 [Serializable]
