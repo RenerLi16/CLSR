@@ -654,7 +654,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &337780576
 Transform:
   m_ObjectHideFlags: 0
@@ -934,13 +934,13 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 833648090}
-  - {fileID: 633566438}
   - {fileID: 715083894}
   - {fileID: 584151483}
   - {fileID: 384848615}
   - {fileID: 948370098}
   - {fileID: 1188680695}
   - {fileID: 271881255}
+  - {fileID: 633566438}
   - {fileID: 175030819}
   - {fileID: 1422277308}
   - {fileID: 489328528}
@@ -1127,6 +1127,50 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4599601778306792530, guid: 716a38a30f72049ffac048fcb0667c98, type: 3}
   m_PrefabInstance: {fileID: 489328527}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &506285574
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 506285575}
+  - component: {fileID: 506285576}
+  m_Layer: 0
+  m_Name: GameSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &506285575
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506285574}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &506285576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506285574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d683f5daae007415dac12adf36ab5495, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NodeSelectionManager
 --- !u!1 &521431500
 GameObject:
   m_ObjectHideFlags: 0
@@ -5352,3 +5396,4 @@ SceneRoots:
   - {fileID: 1216969074}
   - {fileID: 311070350}
   - {fileID: 521431501}
+  - {fileID: 506285575}
