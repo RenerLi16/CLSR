@@ -52,14 +52,18 @@ public class RescueNode : MonoBehaviour
             NodeSelectionManager.Instance.SelectNode(this);
         }
 
-        Debug.Log(
-            "Selected node: " + nodeId +
-            " | Depth: " + depth +
-            " | Difficulty: " + difficulty +
-            " | Survivors: " + survivorCount
-        );
+        Debug.Log("Selected node: " + nodeId);
     }
 
+    public void LoadDefinition(RescueNodeDefinition definition)
+    {
+        nodeId = definition.nodeId;
+        depth = definition.depth;
+        difficulty = definition.difficulty;
+        survivorCount = definition.survivorCount;
+        explored = false;
+    }
+    
     public void SetSelected(bool value)
     {
         selected = value;
