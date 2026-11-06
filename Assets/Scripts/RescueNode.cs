@@ -17,6 +17,7 @@ public class RescueNode : MonoBehaviour
     private Renderer nodeRenderer;
     private Color normalColor;
     private bool selected;
+    private bool mouseOver;
 
     private void Awake()
     {
@@ -30,6 +31,8 @@ public class RescueNode : MonoBehaviour
 
     private void OnMouseEnter()
     {
+        mouseOver = true;
+
         if (!selected)
         {
             SetColor(hoverColor);
@@ -38,13 +41,16 @@ public class RescueNode : MonoBehaviour
 
     private void OnMouseExit()
     {
+        mouseOver = false;
         SetColor(selected ? selectedColor : normalColor);
     }
 
     private void OnMouseDown()
     {
-        selected = !selected;
-        SetColor(selected ? selectedColor : hoverColor);
+        if (NodeSelectionManager.Instance != null)
+        {
+            NodeSelectionManager.Instance.SelectNode(this);
+        }
 
         Debug.Log(
             "Selected node: " + nodeId +
@@ -52,6 +58,20 @@ public class RescueNode : MonoBehaviour
             " | Difficulty: " + difficulty +
             " | Survivors: " + survivorCount
         );
+    }
+
+    public void SetSelected(bool value)
+    {
+        selected = value;
+
+        if (selected)
+        {
+            SetColor(selectedColor);
+        }
+        else
+        {
+            SetColor(mouseOver ? hoverColor : normalColor);
+        }
     }
 
     private void SetColor(Color newColor)
