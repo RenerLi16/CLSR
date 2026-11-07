@@ -126,6 +126,66 @@ public class RescueGameController : MonoBehaviour
         PrintCurrentState();
     }
 
+    public void ClearPlan()
+    {
+        plannedAssignments.Clear();
+
+        groupsRemaining =
+            scenarioController.CurrentScenario.rescueGroupsPerDay;
+
+        PrintCurrentState();
+    }
+
+    public void ConfirmPlan()
+    {
+        if (plannedAssignments.Count == 0)
+        {
+            Debug.LogWarning(
+                "Assign at least one rescue group before confirming."
+            );
+            return;
+        }
+
+        Debug.Log("Expedition plan confirmed for Day " + currentDay + ".");
+
+        foreach (ExpeditionAssignment assignment in plannedAssignments)
+        {
+            Debug.Log(
+                assignment.assignedGroups +
+                " group(s) assigned toward Node " +
+                assignment.targetNodeId
+            );
+        }
+
+        // Expedition resolution will be added in the next stage.
+    }
+
+    public int GetAssignedGroups(string nodeId)
+    {
+        ExpeditionAssignment assignment = FindAssignment(nodeId);
+
+        if (assignment == null)
+        {
+            return 0;
+        }
+
+        return assignment.assignedGroups;
+    }
+
+    private ExpeditionAssignment FindAssignment(string nodeId)
+    {
+        return plannedAssignments.Find(
+            assignment => assignment.targetNodeId == nodeId
+        );
+    }
+
+    private void PrintCurrentState()
+    {
+        Debug.Log(
+            "Day " + currentDay +
+            " | Groups remaining: " + groupsRemaining
+        );
+    }
 }
 
 [Serializable]
