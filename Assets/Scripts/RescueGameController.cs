@@ -29,6 +29,14 @@ public class RescueGameController : MonoBehaviour
         get { return groupsRemaining; }
     }
 
+    public int TotalDays
+    {
+        get
+        {
+            return scenarioController.CurrentScenario.totalDays;
+        }
+    }
+
     public IReadOnlyList<ExpeditionAssignment> PlannedAssignments
     {
         get { return plannedAssignments; }
