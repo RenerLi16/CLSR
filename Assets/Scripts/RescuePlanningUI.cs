@@ -229,7 +229,7 @@ public class RescuePlanningUI : MonoBehaviour
         panelRect.anchorMax = Vector2.zero;
         panelRect.pivot = Vector2.zero;
         panelRect.anchoredPosition = new Vector2(30f, 30f);
-        panelRect.sizeDelta = new Vector2(580f, 390f);
+        panelRect.sizeDelta = new Vector2(580f, 460f);
 
         dayText = CreateText(panel.transform, "DayText", 22f, -18f, 536f, 30f);
         groupsText = CreateText(panel.transform, "GroupsText", 22f, -50f, 536f, 30f);
