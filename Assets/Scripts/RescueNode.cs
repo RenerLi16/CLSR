@@ -20,6 +20,7 @@ public class RescueNode : MonoBehaviour
     public Color blockedColor = new Color(0.9f, 0.45f, 0.2f);
 
     private Renderer nodeRenderer;
+    private Color initialColor;
     private Color normalColor;
     private bool selected;
     private bool mouseOver;
@@ -30,7 +31,8 @@ public class RescueNode : MonoBehaviour
 
         if (nodeRenderer != null)
         {
-            normalColor = nodeRenderer.material.color;
+            initialColor = nodeRenderer.material.color;
+            normalColor = initialColor;
         }
     }
 
@@ -105,6 +107,17 @@ public class RescueNode : MonoBehaviour
     public void MarkSurvivorsRescued()
     {
         survivorsRescued = true;
+    }
+
+    public void ResetDiscovery()
+    {
+        explored = false;
+        reached = false;
+        survivorsRescued = false;
+        selected = false;
+        mouseOver = false;
+        normalColor = initialColor;
+        SetColor(normalColor);
     }
 
     private void SetColor(Color newColor)

@@ -47,6 +47,12 @@ public class RescuePlanningUI : MonoBehaviour
     [SerializeField]
     private TMP_Text resultText;
 
+    private Button removeGroupButton;
+    private Button addGroupButton;
+    private Button clearPlanButton;
+    private Button beginSearchButton;
+    private Button restartButton;
+
     private void Awake()
     {
         if (gameController == null)
@@ -89,6 +95,12 @@ public class RescuePlanningUI : MonoBehaviour
         RefreshDisplay();
     }
 
+    public void RestartGame()
+    {
+        gameController.RestartGame();
+        RefreshDisplay();
+    }
+
     private void RefreshDisplay()
     {
         if (gameController == null)
@@ -122,6 +134,8 @@ public class RescuePlanningUI : MonoBehaviour
             gameController.TotalSurvivors;
 
         resultText.text = gameController.LastDaySummary;
+
+        UpdateButtonState();
 
         RescueNode selectedNode = null;
 
@@ -175,6 +189,20 @@ public class RescuePlanningUI : MonoBehaviour
             rescueStatus;
     }
 
+    private void UpdateButtonState()
+    {
+        bool planning = !gameController.GameOver;
+
+        if (removeGroupButton != null)
+        {
+            removeGroupButton.interactable = planning;
+            addGroupButton.interactable = planning;
+            clearPlanButton.interactable = planning;
+            beginSearchButton.gameObject.SetActive(planning);
+            restartButton.gameObject.SetActive(!planning);
+        }
+    }
+
     private void BuildPrototypeInterface()
     {
         GameObject canvasObject = new GameObject(
@@ -212,10 +240,12 @@ public class RescuePlanningUI : MonoBehaviour
         rescuedText = CreateText(panel.transform, "RescuedText", 22f, -198f, 536f, 30f);
         resultText = CreateText(panel.transform, "ResultText", 22f, -230f, 536f, 64f, true);
 
-        CreateButton(panel.transform, "RemoveGroupButton", "- GROUP", 22f, 74f, 165f, 48f, RemoveGroup);
-        CreateButton(panel.transform, "AddGroupButton", "+ GROUP", 197f, 74f, 165f, 48f, AddGroup);
-        CreateButton(panel.transform, "ClearPlanButton", "CLEAR PLAN", 372f, 74f, 186f, 48f, ClearPlan);
-        CreateButton(panel.transform, "BeginSearchButton", "BEGIN SEARCH", 22f, 18f, 536f, 46f, BeginSearch);
+        removeGroupButton = CreateButton(panel.transform, "RemoveGroupButton", "- GROUP", 22f, 74f, 165f, 48f, RemoveGroup);
+        addGroupButton = CreateButton(panel.transform, "AddGroupButton", "+ GROUP", 197f, 74f, 165f, 48f, AddGroup);
+        clearPlanButton = CreateButton(panel.transform, "ClearPlanButton", "CLEAR PLAN", 372f, 74f, 186f, 48f, ClearPlan);
+        beginSearchButton = CreateButton(panel.transform, "BeginSearchButton", "BEGIN SEARCH", 22f, 18f, 536f, 46f, BeginSearch);
+        restartButton = CreateButton(panel.transform, "RestartButton", "RESTART", 22f, 18f, 536f, 46f, RestartGame);
+        restartButton.gameObject.SetActive(false);
     }
 
     private static GameObject CreateUIObject(string objectName, Transform parent)
@@ -253,7 +283,7 @@ public class RescuePlanningUI : MonoBehaviour
         return text;
     }
 
-    private static void CreateButton(
+    private static Button CreateButton(
         Transform parent,
         string objectName,
         string label,
@@ -291,5 +321,7 @@ public class RescuePlanningUI : MonoBehaviour
         labelRect.anchorMax = Vector2.one;
         labelRect.offsetMin = Vector2.zero;
         labelRect.offsetMax = Vector2.zero;
+
+        return button;
     }
 }

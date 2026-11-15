@@ -80,7 +80,11 @@ public class RescueGameController : MonoBehaviour
             scenarioController = GetComponent<ScenarioController>();
         }
 
-        if (scenarioController == null || scenarioController.CurrentScenario == null)
+        if (
+            scenarioController == null ||
+            scenarioController.CurrentScenario == null ||
+            !scenarioController.IsReady
+        )
         {
             Debug.LogError("RescueGameController requires a valid ScenarioController.");
             enabled = false;
@@ -240,13 +244,41 @@ public class RescueGameController : MonoBehaviour
         {
             gameOver = true;
             groupsRemaining = 0;
-            LastDaySummary += " Search complete.";
+            LastDaySummary +=
+                " Search complete: " +
+                totalRescued +
+                " of " +
+                TotalSurvivors +
+                " survivors rescued.";
             return;
         }
 
         currentDay++;
         groupsRemaining =
             scenarioController.CurrentScenario.rescueGroupsPerDay;
+    }
+
+    public void RestartGame()
+    {
+        currentDay = 1;
+        groupsRemaining =
+            scenarioController.CurrentScenario.rescueGroupsPerDay;
+
+        plannedAssignments.Clear();
+        lastDayResults.Clear();
+        rescuedNodeIds.Clear();
+        totalRescued = 0;
+        gameOver = false;
+        LastDaySummary = "Select destinations and assign rescue groups.";
+
+        scenarioController.ResetSceneNodes();
+
+        if (NodeSelectionManager.Instance != null)
+        {
+            NodeSelectionManager.Instance.ClearSelection();
+        }
+
+        PrintCurrentState();
     }
 
     public int GetAssignedGroups(string nodeId)

@@ -15,16 +15,26 @@ public class ScenarioController : MonoBehaviour
         get { return scenario; }
     }
 
-    private void Start()
+    public bool IsReady { get; private set; }
+
+    private void Awake()
     {
         LoadScenario();
     }
 
     private void LoadScenario()
     {
+        IsReady = false;
+
         if (scenario == null)
         {
             Debug.LogError("No rescue scenario has been assigned.");
+            return;
+        }
+
+        if (!ValidateScenario())
+        {
+            Debug.LogError("Scenario validation failed. Gameplay initialization stopped.");
             return;
         }
 
@@ -72,6 +82,8 @@ public class ScenarioController : MonoBehaviour
         Debug.Log(
             "B branch survivors: " + CountBranchSurvivors("B")
         );
+
+        IsReady = true;
     }
 
     public int CountBranchSurvivors(string rootNodeId)
@@ -129,6 +141,113 @@ public class ScenarioController : MonoBehaviour
 
         reversePath.Reverse();
         return reversePath;
+    }
+
+    public void ResetSceneNodes()
+    {
+        foreach (RescueNode sceneNode in sceneNodes.Values)
+        {
+            sceneNode.ResetDiscovery();
+        }
+    }
+
+    private bool ValidateScenario()
+    {
+        bool valid = true;
+        Dictionary<string, RescueNodeDefinition> definitions =
+            new Dictionary<string, RescueNodeDefinition>();
+
+        if (scenario.totalDays < 1)
+        {
+            Debug.LogError("Scenario must contain at least one day.");
+            valid = false;
+        }
+
+        if (scenario.rescueGroupsPerDay < 1)
+        {
+            Debug.LogError("Scenario must provide at least one rescue group per day.");
+            valid = false;
+        }
+
+        foreach (RescueNodeDefinition definition in scenario.nodes)
+        {
+            if (string.IsNullOrWhiteSpace(definition.nodeId))
+            {
+                Debug.LogError("Scenario contains a node with no ID.");
+                valid = false;
+                continue;
+            }
+
+            if (!definitions.TryAdd(definition.nodeId, definition))
+            {
+                Debug.LogError("Duplicate scenario node ID: " + definition.nodeId);
+                valid = false;
+            }
+
+            if (definition.difficulty < 0 || definition.survivorCount < 0)
+            {
+                Debug.LogError("Node " + definition.nodeId + " contains a negative value.");
+                valid = false;
+            }
+        }
+
+        if (!definitions.ContainsKey("Camp"))
+        {
+            Debug.LogError("Scenario must contain the Camp node.");
+            return false;
+        }
+
+        foreach (RescueNodeDefinition definition in scenario.nodes)
+        {
+            if (definition.nodeId == "Camp")
+            {
+                continue;
+            }
+
+            if (!definitions.TryGetValue(definition.parentNodeId, out RescueNodeDefinition parent))
+            {
+                Debug.LogError(
+                    "Node " + definition.nodeId +
+                    " has missing parent " + definition.parentNodeId + "."
+                );
+                valid = false;
+                continue;
+            }
+
+            if (definition.depth != parent.depth + 1)
+            {
+                Debug.LogError("Node " + definition.nodeId + " has an invalid depth.");
+                valid = false;
+            }
+
+            if (definition.difficulty < parent.difficulty)
+            {
+                Debug.LogError(
+                    "Difficulty decreases from " +
+                    parent.nodeId +
+                    " to " +
+                    definition.nodeId + "."
+                );
+                valid = false;
+            }
+
+            HashSet<string> visited = new HashSet<string>();
+            RescueNodeDefinition current = definition;
+
+            while (current != null && current.nodeId != "Camp")
+            {
+                if (!visited.Add(current.nodeId))
+                {
+                    Debug.LogError("Scenario contains a parent cycle at " + current.nodeId + ".");
+                    valid = false;
+                    break;
+                }
+
+                definitions.TryGetValue(current.parentNodeId, out current);
+            }
+        }
+
+        return valid;
     }
 
     private int CountNodeAndChildren(string nodeId)

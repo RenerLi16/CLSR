@@ -28,4 +28,13 @@ public class NodeSelectionManager : MonoBehaviour
         SelectedNode = newNode;
         SelectedNode.SetSelected(true);
     }
+
+    public void ClearSelection()
+    {
+        if (SelectedNode != null)
+        {
+            SelectedNode.SetSelected(false);
+            SelectedNode = null;
+        }
+    }
 }
