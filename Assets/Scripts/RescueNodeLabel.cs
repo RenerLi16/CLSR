@@ -16,6 +16,8 @@ public class RescueNodeLabel : MonoBehaviour
     private RectTransform labelTransform;
     private Text labelText;
 
+    public RectTransform LabelRect => labelTransform;
+
     private void Awake()
     {
         rescueNode = GetComponent<RescueNode>();

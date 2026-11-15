@@ -52,6 +52,8 @@ public class RescuePlanningUI : MonoBehaviour
     private const float PanelHeight = 860f;
     private const int MinFontSize = 16;
 
+    public RectTransform PanelRect { get; private set; }
+
     private GameObject planningContent;
     private GameObject gameOverContent;
     private Text gameOverTitleText;
@@ -231,6 +233,7 @@ public class RescuePlanningUI : MonoBehaviour
         panelRect.pivot = Vector2.zero;
         panelRect.anchoredPosition = new Vector2(30f, 30f);
         panelRect.sizeDelta = new Vector2(PanelWidth, PanelHeight);
+        PanelRect = panelRect;
 
         planningContent = CreateStretchContainer("PlanningContent", panel.transform);
         gameOverContent = CreateStretchContainer("GameOverContent", panel.transform);
