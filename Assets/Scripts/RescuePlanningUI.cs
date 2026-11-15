@@ -48,6 +48,10 @@ public class RescuePlanningUI : MonoBehaviour
     private static readonly Color ButtonColor = new Color(0.05f, 0.29f, 0.31f, 1f);
     private static readonly Color ButtonTextColor = Color.white;
 
+    private const float PanelWidth = 720f;
+    private const float PanelHeight = 860f;
+    private const int MinFontSize = 16;
+
     private GameObject planningContent;
     private GameObject gameOverContent;
     private Text gameOverTitleText;
@@ -144,7 +148,7 @@ public class RescuePlanningUI : MonoBehaviour
             gameController.TotalSurvivors;
 
         resultText.text =
-            "LAST SEARCH\n" +
+            "<b>LAST SEARCH</b>\n" +
             gameController.LastDaySummary;
 
         RescueNode selectedNode = null;
@@ -157,14 +161,15 @@ public class RescuePlanningUI : MonoBehaviour
 
         if (selectedNode == null)
         {
-            selectedText.text = "SELECTED LOCATION: NONE";
+            selectedText.text = "SELECTED LOCATION: <b>NONE</b>";
             assignmentText.text =
-                "Status: No location selected\n" +
-                "Assigned today: 0";
+                "Status: <b>No location selected</b>\n" +
+                "Assigned today: <b>0</b>";
             return;
         }
 
-        selectedText.text = "SELECTED LOCATION: " + selectedNode.nodeId;
+        selectedText.text =
+            "SELECTED LOCATION: <b>" + selectedNode.nodeId.ToUpper() + "</b>";
         assignmentText.text = BuildSelectedNodeDetails(selectedNode);
     }
 
@@ -176,23 +181,26 @@ public class RescuePlanningUI : MonoBehaviour
         if (!node.explored)
         {
             return
-                "Status: Unexplored\n" +
-                "Assigned today: " +
-                assignedGroups;
+                "Status: <b>Unexplored</b>\n" +
+                "Assigned today: <b>" +
+                assignedGroups +
+                "</b>";
         }
 
         if (!node.reached)
         {
             return
-                "Status: Route not passed" +
-                "\nAssigned today: " +
-                assignedGroups;
+                "Status: <b>Route not passed</b>" +
+                "\nAssigned today: <b>" +
+                assignedGroups +
+                "</b>";
         }
 
         return
-            "Status: Reached" +
-            "\nAssigned today: " +
-            assignedGroups;
+            "Status: <b>Reached</b>" +
+            "\nAssigned today: <b>" +
+            assignedGroups +
+            "</b>";
     }
 
     private void BuildPrototypeInterface()
@@ -222,28 +230,37 @@ public class RescuePlanningUI : MonoBehaviour
         panelRect.anchorMax = Vector2.zero;
         panelRect.pivot = Vector2.zero;
         panelRect.anchoredPosition = new Vector2(30f, 30f);
-        panelRect.sizeDelta = new Vector2(640f, 620f);
+        panelRect.sizeDelta = new Vector2(PanelWidth, PanelHeight);
 
         planningContent = CreateStretchContainer("PlanningContent", panel.transform);
         gameOverContent = CreateStretchContainer("GameOverContent", panel.transform);
 
-        dayText = CreateText(planningContent.transform, "DayText", 24f, -18f, 270f, 38f, false, 28);
-        groupsText = CreateText(planningContent.transform, "GroupsText", 330f, -18f, 286f, 38f, false, 22, TextAnchor.MiddleRight);
+        const float pad = 32f;
+        const float contentWidth = PanelWidth - pad * 2f;
+        const float gap = 12f;
+        const float buttonHeight = 66f;
 
-        selectedText = CreateText(planningContent.transform, "SelectedText", 24f, -88f, 592f, 36f, false, 23);
-        assignmentText = CreateText(planningContent.transform, "AssignmentText", 24f, -132f, 592f, 90f, true, 20);
+        dayText = CreateText(planningContent.transform, "DayText", pad, -26f, 330f, 56f, false, 44, TextAnchor.MiddleLeft, true);
+        groupsText = CreateText(planningContent.transform, "GroupsText", pad + 330f, -26f, contentWidth - 330f, 56f, false, 32, TextAnchor.MiddleRight, true);
 
-        rescuedText = CreateText(planningContent.transform, "RescuedText", 24f, -256f, 592f, 34f, false, 21);
-        resultText = CreateText(planningContent.transform, "ResultText", 24f, -304f, 592f, 156f, true, 19);
+        selectedText = CreateText(planningContent.transform, "SelectedText", pad, -108f, contentWidth, 46f, false, 32);
+        assignmentText = CreateText(planningContent.transform, "AssignmentText", pad, -162f, contentWidth, 84f, true, 29, TextAnchor.UpperLeft);
 
-        CreateButton(planningContent.transform, "RemoveGroupButton", "- GROUP", 24f, 74f, 180f, 48f, RemoveGroup);
-        CreateButton(planningContent.transform, "AddGroupButton", "+ GROUP", 214f, 74f, 180f, 48f, AddGroup);
-        CreateButton(planningContent.transform, "ClearPlanButton", "CLEAR PLAN", 404f, 74f, 212f, 48f, ClearPlan);
-        CreateButton(planningContent.transform, "BeginSearchButton", "BEGIN SEARCH", 24f, 18f, 592f, 46f, BeginSearch);
+        rescuedText = CreateText(planningContent.transform, "RescuedText", pad, -272f, contentWidth, 50f, false, 36, TextAnchor.MiddleLeft, true);
 
-        gameOverTitleText = CreateText(gameOverContent.transform, "GameOverTitle", 24f, -120f, 592f, 60f, false, 30, TextAnchor.MiddleCenter);
-        gameOverScoreText = CreateText(gameOverContent.transform, "GameOverScore", 24f, -190f, 592f, 70f, true, 26, TextAnchor.MiddleCenter);
-        CreateButton(gameOverContent.transform, "RestartButton", "RESTART", 120f, 90f, 400f, 52f, RestartGame);
+        float buttonsTop = pad + buttonHeight * 2f + gap;
+        float resultTop = 346f;
+        resultText = CreateText(planningContent.transform, "ResultText", pad, -resultTop, contentWidth, PanelHeight - resultTop - buttonsTop - 24f, true, 28, TextAnchor.UpperLeft);
+
+        float smallWidth = (contentWidth - gap * 2f) / 3f;
+        CreateButton(planningContent.transform, "RemoveGroupButton", "- GROUP", pad, pad + buttonHeight + gap, smallWidth, buttonHeight, RemoveGroup);
+        CreateButton(planningContent.transform, "AddGroupButton", "+ GROUP", pad + smallWidth + gap, pad + buttonHeight + gap, smallWidth, buttonHeight, AddGroup);
+        CreateButton(planningContent.transform, "ClearPlanButton", "CLEAR PLAN", pad + (smallWidth + gap) * 2f, pad + buttonHeight + gap, smallWidth, buttonHeight, ClearPlan);
+        CreateButton(planningContent.transform, "BeginSearchButton", "BEGIN SEARCH", pad, pad, contentWidth, buttonHeight, BeginSearch, 34);
+
+        gameOverTitleText = CreateText(gameOverContent.transform, "GameOverTitle", pad, -180f, contentWidth, 70f, false, 46, TextAnchor.MiddleCenter, true);
+        gameOverScoreText = CreateText(gameOverContent.transform, "GameOverScore", pad, -270f, contentWidth, 110f, true, 36, TextAnchor.MiddleCenter);
+        CreateButton(gameOverContent.transform, "RestartButton", "RESTART", (PanelWidth - 420f) / 2f, 110f, 420f, 72f, RestartGame, 34);
         gameOverContent.SetActive(false);
     }
 
@@ -274,18 +291,26 @@ public class RescuePlanningUI : MonoBehaviour
         float height,
         bool wrap = false,
         int fontSize = 21,
-        TextAnchor alignment = TextAnchor.MiddleLeft
+        TextAnchor alignment = TextAnchor.MiddleLeft,
+        bool bold = false
     )
     {
         GameObject textObject = CreateUIObject(objectName, parent);
         Text text = textObject.AddComponent<Text>();
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.fontSize = fontSize;
+        text.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
+        text.supportRichText = true;
         text.color = TextColor;
         text.alignment = alignment;
-        text.horizontalOverflow =
-            wrap ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
+        text.raycastTarget = false;
+        // Wrap/truncate inside the rect and shrink the font if the text
+        // would not otherwise fit, so nothing spills out of the panel.
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        text.verticalOverflow = VerticalWrapMode.Truncate;
+        text.resizeTextForBestFit = true;
+        text.resizeTextMinSize = MinFontSize;
+        text.resizeTextMaxSize = fontSize;
 
         RectTransform rect = textObject.GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(0f, 1f);
@@ -305,7 +330,8 @@ public class RescuePlanningUI : MonoBehaviour
         float y,
         float width,
         float height,
-        UnityEngine.Events.UnityAction action
+        UnityEngine.Events.UnityAction action,
+        int fontSize = 30
     )
     {
         GameObject buttonObject = CreateUIObject(objectName, parent);
@@ -327,7 +353,12 @@ public class RescuePlanningUI : MonoBehaviour
         Text labelText = labelObject.AddComponent<Text>();
         labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         labelText.text = label;
-        labelText.fontSize = 20;
+        labelText.fontSize = fontSize;
+        labelText.fontStyle = FontStyle.Bold;
+        labelText.resizeTextForBestFit = true;
+        labelText.resizeTextMinSize = MinFontSize;
+        labelText.resizeTextMaxSize = fontSize;
+        labelText.raycastTarget = false;
         labelText.color = ButtonTextColor;
         labelText.alignment = TextAnchor.MiddleCenter;
 
