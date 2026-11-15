@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Collider))]
 public class RescueNode : MonoBehaviour
@@ -47,6 +48,11 @@ public class RescueNode : MonoBehaviour
 
     private void OnMouseDown()
     {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
+
         if (NodeSelectionManager.Instance != null)
         {
             NodeSelectionManager.Instance.SelectNode(this);

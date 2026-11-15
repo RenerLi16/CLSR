@@ -30,8 +30,7 @@ public class ScenarioController : MonoBehaviour
 
         sceneNodes.Clear();
 
-        RescueNode[] foundNodes =
-            FindObjectsByType<RescueNode>(FindObjectsSortMode.None);
+        RescueNode[] foundNodes = FindObjectsByType<RescueNode>();
 
         foreach (RescueNode node in foundNodes)
         {
