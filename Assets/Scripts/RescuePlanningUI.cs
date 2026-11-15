@@ -43,6 +43,11 @@ public class RescuePlanningUI : MonoBehaviour
     [SerializeField]
     private Text resultText;
 
+    private static readonly Color PanelColor = Color.white;
+    private static readonly Color TextColor = Color.black;
+    private static readonly Color ButtonColor = new Color(0.05f, 0.29f, 0.31f, 1f);
+    private static readonly Color ButtonTextColor = Color.white;
+
     private GameObject planningContent;
     private GameObject gameOverContent;
     private Text gameOverTitleText;
@@ -210,7 +215,7 @@ public class RescuePlanningUI : MonoBehaviour
 
         GameObject panel = CreateUIObject("PlanningPanel", canvasObject.transform);
         Image panelImage = panel.AddComponent<Image>();
-        panelImage.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
+        panelImage.color = PanelColor;
 
         RectTransform panelRect = panel.GetComponent<RectTransform>();
         panelRect.anchorMin = Vector2.zero;
@@ -224,11 +229,9 @@ public class RescuePlanningUI : MonoBehaviour
 
         dayText = CreateText(planningContent.transform, "DayText", 24f, -18f, 270f, 38f, false, 28);
         groupsText = CreateText(planningContent.transform, "GroupsText", 330f, -18f, 286f, 38f, false, 22, TextAnchor.MiddleRight);
-        CreateDivider(planningContent.transform, -66f, 592f);
 
         selectedText = CreateText(planningContent.transform, "SelectedText", 24f, -88f, 592f, 36f, false, 23);
         assignmentText = CreateText(planningContent.transform, "AssignmentText", 24f, -132f, 592f, 90f, true, 20);
-        CreateDivider(planningContent.transform, -238f, 592f);
 
         rescuedText = CreateText(planningContent.transform, "RescuedText", 24f, -256f, 592f, 34f, false, 21);
         resultText = CreateText(planningContent.transform, "ResultText", 24f, -304f, 592f, 156f, true, 19);
@@ -255,19 +258,6 @@ public class RescuePlanningUI : MonoBehaviour
         return container;
     }
 
-    private static void CreateDivider(Transform parent, float y, float width)
-    {
-        GameObject divider = CreateUIObject("Divider", parent);
-        divider.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.18f);
-
-        RectTransform rect = divider.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0f, 1f);
-        rect.anchorMax = new Vector2(0f, 1f);
-        rect.pivot = new Vector2(0f, 1f);
-        rect.anchoredPosition = new Vector2(24f, y);
-        rect.sizeDelta = new Vector2(width, 2f);
-    }
-
     private static GameObject CreateUIObject(string objectName, Transform parent)
     {
         GameObject result = new GameObject(objectName, typeof(RectTransform));
@@ -291,7 +281,7 @@ public class RescuePlanningUI : MonoBehaviour
         Text text = textObject.AddComponent<Text>();
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.fontSize = fontSize;
-        text.color = new Color(0.92f, 0.95f, 0.96f, 1f);
+        text.color = TextColor;
         text.alignment = alignment;
         text.horizontalOverflow =
             wrap ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
@@ -320,7 +310,7 @@ public class RescuePlanningUI : MonoBehaviour
     {
         GameObject buttonObject = CreateUIObject(objectName, parent);
         Image image = buttonObject.AddComponent<Image>();
-        image.color = new Color(0.35f, 0.35f, 0.35f, 1f);
+        image.color = ButtonColor;
 
         Button button = buttonObject.AddComponent<Button>();
         button.targetGraphic = image;
@@ -338,7 +328,7 @@ public class RescuePlanningUI : MonoBehaviour
         labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         labelText.text = label;
         labelText.fontSize = 20;
-        labelText.color = Color.white;
+        labelText.color = ButtonTextColor;
         labelText.alignment = TextAnchor.MiddleCenter;
 
         RectTransform labelRect = labelObject.GetComponent<RectTransform>();
