@@ -364,30 +364,41 @@ public class RescueGameController : MonoBehaviour
         {
             if (result.invalidRoute)
             {
-                summaries.Add(result.targetNodeId + ": invalid route");
+                summaries.Add("Route to " + result.targetNodeId + " was invalid.");
             }
             else if (!string.IsNullOrEmpty(result.stoppedAtNodeId))
             {
                 summaries.Add(
+                    "Team heading to " +
                     result.targetNodeId +
-                    ": stopped at " +
+                    " stopped at " +
                     result.stoppedAtNodeId +
-                    " (needs " +
+                    "; it requires " +
                     result.requiredGroups +
-                    ")"
+                    " groups."
+                );
+            }
+            else if (result.rescuedSurvivors > 0)
+            {
+                summaries.Add(
+                    "Team reached " +
+                    result.targetNodeId +
+                    " and rescued " +
+                    result.rescuedSurvivors +
+                    " survivors."
                 );
             }
             else
             {
                 summaries.Add(
+                    "Team reached " +
                     result.targetNodeId +
-                    ": reached, rescued " +
-                    result.rescuedSurvivors
+                    ". No new survivors found."
                 );
             }
         }
 
-        return string.Join(" | ", summaries);
+        return string.Join(" ", summaries);
     }
 
     private void PrintCurrentState()

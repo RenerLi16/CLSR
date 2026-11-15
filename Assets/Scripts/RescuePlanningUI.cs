@@ -46,11 +46,10 @@ public class RescuePlanningUI : MonoBehaviour
     [SerializeField]
     private Text resultText;
 
-    private Button removeGroupButton;
-    private Button addGroupButton;
-    private Button clearPlanButton;
-    private Button beginSearchButton;
-    private Button restartButton;
+    private GameObject planningContent;
+    private GameObject gameOverContent;
+    private Text gameOverTitleText;
+    private Text gameOverScoreText;
 
     private void Awake()
     {
@@ -107,34 +106,53 @@ public class RescuePlanningUI : MonoBehaviour
             return;
         }
 
+        bool gameOver = gameController.GameOver;
+
+        if (planningContent != null)
+        {
+            planningContent.SetActive(!gameOver);
+            gameOverContent.SetActive(gameOver);
+        }
+
+        if (gameOver)
+        {
+            gameOverTitleText.text = "SEARCH COMPLETE";
+            gameOverScoreText.text =
+                gameController.TotalRescued +
+                " OF " +
+                gameController.TotalSurvivors +
+                " SURVIVORS RESCUED";
+            return;
+        }
+
         dayText.text =
             "DAY " +
             gameController.CurrentDay +
-            " / " +
+            " OF " +
             gameController.TotalDays;
 
         groupsText.text =
-            "RESCUE GROUPS AVAILABLE: " +
+            "GROUPS LEFT: " +
             gameController.GroupsRemaining;
 
         ScenarioController scenarioController =
             gameController.GetComponent<ScenarioController>();
 
         branchText.text =
-            "KNOWN SURVIVORS: A " +
+            "KNOWN SURVIVORS\nBranch A: " +
             scenarioController.CountBranchSurvivors("A") +
-            " | B " +
+            "     Branch B: " +
             scenarioController.CountBranchSurvivors("B");
 
         rescuedText.text =
-            "RESCUED: " +
+            "TOTAL RESCUED: " +
             gameController.TotalRescued +
             " / " +
             gameController.TotalSurvivors;
 
-        resultText.text = gameController.LastDaySummary;
-
-        UpdateButtonState();
+        resultText.text =
+            "LAST SEARCH\n" +
+            gameController.LastDaySummary;
 
         RescueNode selectedNode = null;
 
@@ -146,60 +164,51 @@ public class RescuePlanningUI : MonoBehaviour
 
         if (selectedNode == null)
         {
-            selectedText.text = "SELECTED DESTINATION: NONE";
-            assignmentText.text = "GROUPS ASSIGNED HERE: 0";
+            selectedText.text = "SELECTED LOCATION: NONE";
+            assignmentText.text =
+                "Select a location on the map.\n" +
+                "Assigned today: 0";
             return;
         }
 
-        selectedText.text = BuildSelectedNodeText(selectedNode);
-
-        assignmentText.text =
-            "GROUPS ASSIGNED HERE: " +
-            gameController.GetAssignedGroups(selectedNode.nodeId);
+        selectedText.text = "SELECTED LOCATION: " + selectedNode.nodeId;
+        assignmentText.text = BuildSelectedNodeDetails(selectedNode);
     }
 
-    private static string BuildSelectedNodeText(RescueNode node)
+    private string BuildSelectedNodeDetails(RescueNode node)
     {
+        int assignedGroups =
+            gameController.GetAssignedGroups(node.nodeId);
+
         if (!node.explored)
         {
-            return "SELECTED: " + node.nodeId + " | UNEXPLORED";
+            return
+                "Status: Unexplored\n" +
+                "Assigned today: " +
+                assignedGroups;
         }
 
         if (!node.reached)
         {
             return
-                "SELECTED: " +
-                node.nodeId +
-                " | STOPPED | NEEDS " +
+                "Required groups: " +
                 node.difficulty +
-                " GROUPS";
+                "\nStatus: Route not passed" +
+                "\nAssigned today: " +
+                assignedGroups;
         }
 
         string rescueStatus =
-            node.survivorsRescued ? " | RESCUED" : string.Empty;
+            node.survivorsRescued ? " - Rescued" : string.Empty;
 
         return
-            "SELECTED: " +
-            node.nodeId +
-            " | NEEDS " +
+            "Required groups: " +
             node.difficulty +
-            " | SURVIVORS " +
+            "\nSurvivors: " +
             node.survivorCount +
-            rescueStatus;
-    }
-
-    private void UpdateButtonState()
-    {
-        bool planning = !gameController.GameOver;
-
-        if (removeGroupButton != null)
-        {
-            removeGroupButton.interactable = planning;
-            addGroupButton.interactable = planning;
-            clearPlanButton.interactable = planning;
-            beginSearchButton.gameObject.SetActive(planning);
-            restartButton.gameObject.SetActive(!planning);
-        }
+            rescueStatus +
+            "\nAssigned today: " +
+            assignedGroups;
     }
 
     private void BuildPrototypeInterface()
@@ -229,22 +238,58 @@ public class RescuePlanningUI : MonoBehaviour
         panelRect.anchorMax = Vector2.zero;
         panelRect.pivot = Vector2.zero;
         panelRect.anchoredPosition = new Vector2(30f, 30f);
-        panelRect.sizeDelta = new Vector2(580f, 460f);
+        panelRect.sizeDelta = new Vector2(640f, 520f);
 
-        dayText = CreateText(panel.transform, "DayText", 22f, -18f, 536f, 30f);
-        groupsText = CreateText(panel.transform, "GroupsText", 22f, -50f, 536f, 30f);
-        branchText = CreateText(panel.transform, "BranchText", 22f, -82f, 536f, 30f);
-        selectedText = CreateText(panel.transform, "SelectedText", 22f, -124f, 536f, 30f);
-        assignmentText = CreateText(panel.transform, "AssignmentText", 22f, -156f, 536f, 30f);
-        rescuedText = CreateText(panel.transform, "RescuedText", 22f, -198f, 536f, 30f);
-        resultText = CreateText(panel.transform, "ResultText", 22f, -230f, 536f, 64f, true);
+        planningContent = CreateStretchContainer("PlanningContent", panel.transform);
+        gameOverContent = CreateStretchContainer("GameOverContent", panel.transform);
 
-        removeGroupButton = CreateButton(panel.transform, "RemoveGroupButton", "- GROUP", 22f, 74f, 165f, 48f, RemoveGroup);
-        addGroupButton = CreateButton(panel.transform, "AddGroupButton", "+ GROUP", 197f, 74f, 165f, 48f, AddGroup);
-        clearPlanButton = CreateButton(panel.transform, "ClearPlanButton", "CLEAR PLAN", 372f, 74f, 186f, 48f, ClearPlan);
-        beginSearchButton = CreateButton(panel.transform, "BeginSearchButton", "BEGIN SEARCH", 22f, 18f, 536f, 46f, BeginSearch);
-        restartButton = CreateButton(panel.transform, "RestartButton", "RESTART", 22f, 18f, 536f, 46f, RestartGame);
-        restartButton.gameObject.SetActive(false);
+        dayText = CreateText(planningContent.transform, "DayText", 24f, -18f, 270f, 38f, false, 28);
+        groupsText = CreateText(planningContent.transform, "GroupsText", 330f, -18f, 286f, 38f, false, 22, TextAnchor.MiddleRight);
+        CreateDivider(planningContent.transform, -66f, 592f);
+
+        branchText = CreateText(planningContent.transform, "BranchText", 24f, -78f, 592f, 62f, true, 20);
+        CreateDivider(planningContent.transform, -150f, 592f);
+
+        selectedText = CreateText(planningContent.transform, "SelectedText", 24f, -162f, 592f, 36f, false, 23);
+        assignmentText = CreateText(planningContent.transform, "AssignmentText", 24f, -198f, 592f, 90f, true, 20);
+        CreateDivider(planningContent.transform, -296f, 592f);
+
+        rescuedText = CreateText(planningContent.transform, "RescuedText", 24f, -306f, 592f, 34f, false, 21);
+        resultText = CreateText(planningContent.transform, "ResultText", 24f, -340f, 592f, 76f, true, 19);
+
+        CreateButton(planningContent.transform, "RemoveGroupButton", "- GROUP", 24f, 74f, 180f, 48f, RemoveGroup);
+        CreateButton(planningContent.transform, "AddGroupButton", "+ GROUP", 214f, 74f, 180f, 48f, AddGroup);
+        CreateButton(planningContent.transform, "ClearPlanButton", "CLEAR PLAN", 404f, 74f, 212f, 48f, ClearPlan);
+        CreateButton(planningContent.transform, "BeginSearchButton", "BEGIN SEARCH", 24f, 18f, 592f, 46f, BeginSearch);
+
+        gameOverTitleText = CreateText(gameOverContent.transform, "GameOverTitle", 24f, -120f, 592f, 60f, false, 30, TextAnchor.MiddleCenter);
+        gameOverScoreText = CreateText(gameOverContent.transform, "GameOverScore", 24f, -190f, 592f, 70f, true, 26, TextAnchor.MiddleCenter);
+        CreateButton(gameOverContent.transform, "RestartButton", "RESTART", 120f, 90f, 400f, 52f, RestartGame);
+        gameOverContent.SetActive(false);
+    }
+
+    private static GameObject CreateStretchContainer(string objectName, Transform parent)
+    {
+        GameObject container = CreateUIObject(objectName, parent);
+        RectTransform rect = container.GetComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        return container;
+    }
+
+    private static void CreateDivider(Transform parent, float y, float width)
+    {
+        GameObject divider = CreateUIObject("Divider", parent);
+        divider.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.18f);
+
+        RectTransform rect = divider.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = new Vector2(24f, y);
+        rect.sizeDelta = new Vector2(width, 2f);
     }
 
     private static GameObject CreateUIObject(string objectName, Transform parent)
@@ -261,15 +306,17 @@ public class RescuePlanningUI : MonoBehaviour
         float y,
         float width,
         float height,
-        bool wrap = false
+        bool wrap = false,
+        int fontSize = 21,
+        TextAnchor alignment = TextAnchor.MiddleLeft
     )
     {
         GameObject textObject = CreateUIObject(objectName, parent);
         Text text = textObject.AddComponent<Text>();
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.fontSize = 23;
+        text.fontSize = fontSize;
         text.color = new Color(0.92f, 0.95f, 0.96f, 1f);
-        text.alignment = TextAnchor.MiddleLeft;
+        text.alignment = alignment;
         text.horizontalOverflow =
             wrap ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
         text.verticalOverflow = VerticalWrapMode.Overflow;
