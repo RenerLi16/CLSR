@@ -76,12 +76,18 @@ public class ScenarioController : MonoBehaviour
         }
 
         Debug.Log("Loaded scenario: " + scenario.scenarioName);
-        Debug.Log(
-            "A branch survivors: " + CountBranchSurvivors("A")
-        );
-        Debug.Log(
-            "B branch survivors: " + CountBranchSurvivors("B")
-        );
+
+        foreach (RescueNodeDefinition definition in scenario.nodes)
+        {
+            if (definition.parentNodeId == "Camp")
+            {
+                Debug.Log(
+                    definition.nodeId +
+                    " branch survivors: " +
+                    CountBranchSurvivors(definition.nodeId)
+                );
+            }
+        }
 
         IsReady = true;
     }

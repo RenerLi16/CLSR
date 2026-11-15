@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/BlackridgeStorm.unity
+    guid: 84034cb9a16054a2bb0029c54c2df902
   m_configObjects: {}

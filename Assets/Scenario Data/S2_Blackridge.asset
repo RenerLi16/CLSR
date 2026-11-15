@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b60f5297ee014700a97b7e762a476a5, type: 3}
+  m_Name: S2_Blackridge
+  m_EditorClassIdentifier: Assembly-CSharp::RescueScenarioData
+  scenarioName: Blackridge Storm Rescue
+  totalDays: 3
+  rescueGroupsPerDay: 4
+  nodes:
+  - nodeId: Camp
+    parentNodeId: 
+    depth: 0
+    difficulty: 0
+    survivorCount: 0
+  - nodeId: West Fork
+    parentNodeId: Camp
+    depth: 1
+    difficulty: 1
+    survivorCount: 0
+  - nodeId: Fallen Timber Trail
+    parentNodeId: West Fork
+    depth: 2
+    difficulty: 2
+    survivorCount: 1
+  - nodeId: Fire Lookout
+    parentNodeId: Fallen Timber Trail
+    depth: 3
+    difficulty: 3
+    survivorCount: 3
+  - nodeId: Creek Shelter
+    parentNodeId: West Fork
+    depth: 2
+    difficulty: 2
+    survivorCount: 2
+  - nodeId: North Pass
+    parentNodeId: Camp
+    depth: 1
+    difficulty: 1
+    survivorCount: 0
+  - nodeId: Rockslide Gate
+    parentNodeId: North Pass
+    depth: 2
+    difficulty: 2
+    survivorCount: 0
+  - nodeId: Upper Ridge
+    parentNodeId: Rockslide Gate
+    depth: 3
+    difficulty: 3
+    survivorCount: 2
+  - nodeId: Summit Cabin
+    parentNodeId: Upper Ridge
+    depth: 4
+    difficulty: 4
+    survivorCount: 5
+  - nodeId: Miner's Hut
+    parentNodeId: Rockslide Gate
+    depth: 3
+    difficulty: 2
+    survivorCount: 1
+  - nodeId: Lake Fork
+    parentNodeId: Camp
+    depth: 1
+    difficulty: 1
+    survivorCount: 0
+  - nodeId: Flooded Causeway
+    parentNodeId: Lake Fork
+    depth: 2
+    difficulty: 2
+    survivorCount: 1
+  - nodeId: Lakeside Camp
+    parentNodeId: Flooded Causeway
+    depth: 3
+    difficulty: 2
+    survivorCount: 3
+  - nodeId: Weather Station
+    parentNodeId: Flooded Causeway
+    depth: 3
+    difficulty: 3
+    survivorCount: 3
