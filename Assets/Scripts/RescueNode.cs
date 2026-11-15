@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-[RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(Collider), typeof(RescueNodeLabel))]
 public class RescueNode : MonoBehaviour
 {
     [Header("Node Information")]
@@ -27,6 +27,11 @@ public class RescueNode : MonoBehaviour
 
     private void Awake()
     {
+        if (GetComponent<RescueNodeLabel>() == null)
+        {
+            gameObject.AddComponent<RescueNodeLabel>();
+        }
+
         nodeRenderer = GetComponentInChildren<Renderer>();
 
         if (nodeRenderer != null)

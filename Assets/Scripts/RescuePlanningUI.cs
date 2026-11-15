@@ -38,9 +38,6 @@ public class RescuePlanningUI : MonoBehaviour
     private Text assignmentText;
 
     [SerializeField]
-    private Text branchText;
-
-    [SerializeField]
     private Text rescuedText;
 
     [SerializeField]
@@ -135,15 +132,6 @@ public class RescuePlanningUI : MonoBehaviour
             "GROUPS LEFT: " +
             gameController.GroupsRemaining;
 
-        ScenarioController scenarioController =
-            gameController.GetComponent<ScenarioController>();
-
-        branchText.text =
-            "KNOWN SURVIVORS\nBranch A: " +
-            scenarioController.CountBranchSurvivors("A") +
-            "     Branch B: " +
-            scenarioController.CountBranchSurvivors("B");
-
         rescuedText.text =
             "TOTAL RESCUED: " +
             gameController.TotalRescued +
@@ -166,7 +154,7 @@ public class RescuePlanningUI : MonoBehaviour
         {
             selectedText.text = "SELECTED LOCATION: NONE";
             assignmentText.text =
-                "Select a location on the map.\n" +
+                "Status: No location selected\n" +
                 "Assigned today: 0";
             return;
         }
@@ -191,22 +179,13 @@ public class RescuePlanningUI : MonoBehaviour
         if (!node.reached)
         {
             return
-                "Required groups: " +
-                node.difficulty +
-                "\nStatus: Route not passed" +
+                "Status: Route not passed" +
                 "\nAssigned today: " +
                 assignedGroups;
         }
 
-        string rescueStatus =
-            node.survivorsRescued ? " - Rescued" : string.Empty;
-
         return
-            "Required groups: " +
-            node.difficulty +
-            "\nSurvivors: " +
-            node.survivorCount +
-            rescueStatus +
+            "Status: Reached" +
             "\nAssigned today: " +
             assignedGroups;
     }
@@ -238,7 +217,7 @@ public class RescuePlanningUI : MonoBehaviour
         panelRect.anchorMax = Vector2.zero;
         panelRect.pivot = Vector2.zero;
         panelRect.anchoredPosition = new Vector2(30f, 30f);
-        panelRect.sizeDelta = new Vector2(640f, 520f);
+        panelRect.sizeDelta = new Vector2(640f, 620f);
 
         planningContent = CreateStretchContainer("PlanningContent", panel.transform);
         gameOverContent = CreateStretchContainer("GameOverContent", panel.transform);
@@ -247,15 +226,12 @@ public class RescuePlanningUI : MonoBehaviour
         groupsText = CreateText(planningContent.transform, "GroupsText", 330f, -18f, 286f, 38f, false, 22, TextAnchor.MiddleRight);
         CreateDivider(planningContent.transform, -66f, 592f);
 
-        branchText = CreateText(planningContent.transform, "BranchText", 24f, -78f, 592f, 62f, true, 20);
-        CreateDivider(planningContent.transform, -150f, 592f);
+        selectedText = CreateText(planningContent.transform, "SelectedText", 24f, -88f, 592f, 36f, false, 23);
+        assignmentText = CreateText(planningContent.transform, "AssignmentText", 24f, -132f, 592f, 90f, true, 20);
+        CreateDivider(planningContent.transform, -238f, 592f);
 
-        selectedText = CreateText(planningContent.transform, "SelectedText", 24f, -162f, 592f, 36f, false, 23);
-        assignmentText = CreateText(planningContent.transform, "AssignmentText", 24f, -198f, 592f, 90f, true, 20);
-        CreateDivider(planningContent.transform, -296f, 592f);
-
-        rescuedText = CreateText(planningContent.transform, "RescuedText", 24f, -306f, 592f, 34f, false, 21);
-        resultText = CreateText(planningContent.transform, "ResultText", 24f, -340f, 592f, 76f, true, 19);
+        rescuedText = CreateText(planningContent.transform, "RescuedText", 24f, -256f, 592f, 34f, false, 21);
+        resultText = CreateText(planningContent.transform, "ResultText", 24f, -304f, 592f, 156f, true, 19);
 
         CreateButton(planningContent.transform, "RemoveGroupButton", "- GROUP", 24f, 74f, 180f, 48f, RemoveGroup);
         CreateButton(planningContent.transform, "AddGroupButton", "+ GROUP", 214f, 74f, 180f, 48f, AddGroup);

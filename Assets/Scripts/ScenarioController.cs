@@ -91,6 +91,67 @@ public class ScenarioController : MonoBehaviour
         return CountNodeAndChildren(rootNodeId);
     }
 
+    public int CountRemainingBranchSurvivors(string rootNodeId)
+    {
+        RescueNodeDefinition definition = GetDefinition(rootNodeId);
+
+        if (definition == null)
+        {
+            return 0;
+        }
+
+        int remainingAtNode = definition.survivorCount;
+
+        if (
+            sceneNodes.TryGetValue(rootNodeId, out RescueNode sceneNode) &&
+            sceneNode.survivorsRescued
+        )
+        {
+            remainingAtNode = 0;
+        }
+
+        foreach (RescueNodeDefinition possibleChild in scenario.nodes)
+        {
+            if (possibleChild.parentNodeId == rootNodeId)
+            {
+                remainingAtNode +=
+                    CountRemainingBranchSurvivors(possibleChild.nodeId);
+            }
+        }
+
+        return remainingAtNode;
+    }
+
+    public bool IsNodeInformationKnown(string nodeId)
+    {
+        RescueNodeDefinition definition = GetDefinition(nodeId);
+
+        if (definition == null || definition.nodeId == "Camp")
+        {
+            return false;
+        }
+
+        if (
+            sceneNodes.TryGetValue(nodeId, out RescueNode sceneNode) &&
+            sceneNode.explored
+        )
+        {
+            return true;
+        }
+
+        if (definition.parentNodeId == "Camp")
+        {
+            return true;
+        }
+
+        return
+            sceneNodes.TryGetValue(
+                definition.parentNodeId,
+                out RescueNode parentNode
+            ) &&
+            parentNode.explored;
+    }
+
     public int CountTotalSurvivors()
     {
         int total = 0;
