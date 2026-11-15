@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,25 +26,25 @@ public class RescuePlanningUI : MonoBehaviour
 
     [Header("Text")]
     [SerializeField]
-    private TMP_Text dayText;
+    private Text dayText;
 
     [SerializeField]
-    private TMP_Text groupsText;
+    private Text groupsText;
 
     [SerializeField]
-    private TMP_Text selectedText;
+    private Text selectedText;
 
     [SerializeField]
-    private TMP_Text assignmentText;
+    private Text assignmentText;
 
     [SerializeField]
-    private TMP_Text branchText;
+    private Text branchText;
 
     [SerializeField]
-    private TMP_Text rescuedText;
+    private Text rescuedText;
 
     [SerializeField]
-    private TMP_Text resultText;
+    private Text resultText;
 
     private Button removeGroupButton;
     private Button addGroupButton;
@@ -255,7 +254,7 @@ public class RescuePlanningUI : MonoBehaviour
         return result;
     }
 
-    private static TMP_Text CreateText(
+    private static Text CreateText(
         Transform parent,
         string objectName,
         float x,
@@ -266,12 +265,14 @@ public class RescuePlanningUI : MonoBehaviour
     )
     {
         GameObject textObject = CreateUIObject(objectName, parent);
-        TextMeshProUGUI text = textObject.AddComponent<TextMeshProUGUI>();
-        text.fontSize = 23f;
+        Text text = textObject.AddComponent<Text>();
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.fontSize = 23;
         text.color = new Color(0.92f, 0.95f, 0.96f, 1f);
-        text.alignment = TextAlignmentOptions.MidlineLeft;
-        text.textWrappingMode =
-            wrap ? TextWrappingModes.Normal : TextWrappingModes.NoWrap;
+        text.alignment = TextAnchor.MiddleLeft;
+        text.horizontalOverflow =
+            wrap ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
+        text.verticalOverflow = VerticalWrapMode.Overflow;
 
         RectTransform rect = textObject.GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(0f, 1f);
@@ -310,11 +311,12 @@ public class RescuePlanningUI : MonoBehaviour
         rect.sizeDelta = new Vector2(width, height);
 
         GameObject labelObject = CreateUIObject("Label", buttonObject.transform);
-        TextMeshProUGUI labelText = labelObject.AddComponent<TextMeshProUGUI>();
+        Text labelText = labelObject.AddComponent<Text>();
+        labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         labelText.text = label;
-        labelText.fontSize = 20f;
+        labelText.fontSize = 20;
         labelText.color = Color.white;
-        labelText.alignment = TextAlignmentOptions.Center;
+        labelText.alignment = TextAnchor.MiddleCenter;
 
         RectTransform labelRect = labelObject.GetComponent<RectTransform>();
         labelRect.anchorMin = Vector2.zero;
