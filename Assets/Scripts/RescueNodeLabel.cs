@@ -85,8 +85,8 @@ public class RescueNodeLabel : MonoBehaviour
         labelTransform = labelObject.GetComponent<RectTransform>();
         labelTransform.position =
             transform.position + new Vector3(0.85f, 0.9f, 0f);
-        labelTransform.localScale = Vector3.one * 0.008f;
-        labelTransform.sizeDelta = new Vector2(300f, 128f);
+        labelTransform.localScale = Vector3.one * 0.0083f;
+        labelTransform.sizeDelta = new Vector2(330f, 142f);
 
         Canvas canvas = labelObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
@@ -127,7 +127,7 @@ public class RescueNodeLabel : MonoBehaviour
         labelText = textObject.GetComponent<Text>();
         labelText.font =
             Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        labelText.fontSize = 44;
+        labelText.fontSize = 50;
         labelText.alignment = TextAnchor.MiddleLeft;
         labelText.horizontalOverflow = HorizontalWrapMode.Overflow;
         labelText.verticalOverflow = VerticalWrapMode.Overflow;
