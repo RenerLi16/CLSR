@@ -12,6 +12,7 @@ public class RescueNodeLabel : MonoBehaviour
 
     private RescueNode rescueNode;
     private ScenarioController scenarioController;
+    private GameObject labelObject;
     private RectTransform labelTransform;
     private Text labelText;
 
@@ -57,13 +58,23 @@ public class RescueNodeLabel : MonoBehaviour
 
         if (activeCamera != null)
         {
+            labelTransform.position =
+                transform.position + new Vector3(0.85f, 0.9f, 0f);
             labelTransform.rotation = activeCamera.transform.rotation;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (labelObject != null)
+        {
+            Destroy(labelObject);
         }
     }
 
     private void BuildLabel()
     {
-        GameObject labelObject = new GameObject(
+        labelObject = new GameObject(
             "NodeInfoLabel",
             typeof(RectTransform),
             typeof(Canvas),
@@ -72,10 +83,10 @@ public class RescueNodeLabel : MonoBehaviour
         );
 
         labelTransform = labelObject.GetComponent<RectTransform>();
-        labelTransform.SetParent(transform, false);
-        labelTransform.localPosition = new Vector3(2.2f, 12f, 0f);
-        labelTransform.localScale = new Vector3(0.016f, 0.08f, 0.016f);
-        labelTransform.sizeDelta = new Vector2(176f, 68f);
+        labelTransform.position =
+            transform.position + new Vector3(0.85f, 0.9f, 0f);
+        labelTransform.localScale = Vector3.one * 0.008f;
+        labelTransform.sizeDelta = new Vector2(300f, 128f);
 
         Canvas canvas = labelObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
@@ -110,13 +121,13 @@ public class RescueNodeLabel : MonoBehaviour
         RectTransform textRect = textObject.GetComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(8f, 4f);
-        textRect.offsetMax = new Vector2(-8f, -4f);
+        textRect.offsetMin = new Vector2(18f, 10f);
+        textRect.offsetMax = new Vector2(-18f, -10f);
 
         labelText = textObject.GetComponent<Text>();
         labelText.font =
             Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        labelText.fontSize = 25;
+        labelText.fontSize = 44;
         labelText.alignment = TextAnchor.MiddleLeft;
         labelText.horizontalOverflow = HorizontalWrapMode.Overflow;
         labelText.verticalOverflow = VerticalWrapMode.Overflow;
