@@ -8,7 +8,7 @@ public class RescueNodeLabel : MonoBehaviour
         new Color(0.66f, 0.66f, 0.66f, 1f);
 
     private static readonly Color KnownColor =
-        new Color(0.118f, 0.839f, 0.643f, 1f);
+        new Color(0.094f, 0.702f, 0.541f, 1f);
 
     private RescueNode rescueNode;
     private ScenarioController scenarioController;

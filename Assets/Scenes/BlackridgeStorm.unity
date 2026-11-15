@@ -174,8 +174,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &28083491
@@ -476,8 +476,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &167400206
@@ -778,8 +778,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &200550251
@@ -1080,8 +1080,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &430328524
@@ -2138,8 +2138,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &818373319
@@ -2333,8 +2333,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &863783320
@@ -3199,8 +3199,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &1076143062
@@ -3553,8 +3553,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &1192100669
@@ -3963,8 +3963,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &1274947668
@@ -4304,8 +4304,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &1453544108
@@ -4545,8 +4545,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &1511384933
@@ -5266,8 +5266,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &1621476328
@@ -5960,8 +5960,8 @@ MonoBehaviour:
   explored: 0
   reached: 0
   survivorsRescued: 0
-  hoverColor: {r: 0.62, g: 0.95, b: 0.85, a: 1}
-  selectedColor: {r: 0.11764706, g: 0.8392157, b: 0.6431373, a: 1}
+  hoverColor: {r: 0.5, g: 0.84, b: 0.74, a: 1}
+  selectedColor: {r: 0.09411765, g: 0.7019608, b: 0.5411765, a: 1}
   exploredColor: {r: 0.07, g: 0.52, b: 0.4, a: 1}
   blockedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
 --- !u!114 &1788577144

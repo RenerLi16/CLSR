@@ -14,8 +14,8 @@ public class RescueNode : MonoBehaviour
     public bool survivorsRescued = false;
 
     [Header("Interaction Colors")]
-    public Color hoverColor = new Color(0.62f, 0.95f, 0.85f);
-    public Color selectedColor = new Color(0.118f, 0.839f, 0.643f);
+    public Color hoverColor = new Color(0.5f, 0.84f, 0.74f);
+    public Color selectedColor = new Color(0.094f, 0.702f, 0.541f);
     public Color exploredColor = new Color(0.07f, 0.52f, 0.4f);
     public Color blockedColor = new Color(0.45f, 0.45f, 0.45f);
 
