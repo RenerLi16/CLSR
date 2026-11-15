@@ -78,7 +78,7 @@ public class CampLabel : MonoBehaviour
         backgroundRect.offsetMax = Vector2.zero;
 
         Image background = backgroundObject.GetComponent<Image>();
-        background.color = new Color(0.08f, 0.09f, 0.1f, 0.82f);
+        background.color = new Color(0.16f, 0.16f, 0.16f, 0.92f);
         background.raycastTarget = false;
 
         GameObject textObject = new GameObject(
@@ -97,7 +97,7 @@ public class CampLabel : MonoBehaviour
         Text text = textObject.GetComponent<Text>();
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.fontSize = 42;
-        text.color = new Color(0.95f, 0.97f, 0.98f, 1f);
+        text.color = Color.white;
         text.alignment = TextAnchor.MiddleCenter;
         text.raycastTarget = false;
         text.text = "CAMP";
