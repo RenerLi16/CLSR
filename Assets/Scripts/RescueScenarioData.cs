@@ -10,8 +10,8 @@ public class RescueScenarioData : ScriptableObject
 {
     [Header("Scenario Settings")]
     public string scenarioName = "Mountain Search";
-    public int totalDays = 4;
-    public int rescueGroupsPerDay = 6;
+    public int totalDays = 3;
+    public int rescueGroupsPerDay = 4;
 
     [Header("Hidden Map Data")]
     public List<RescueNodeDefinition> nodes =

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: S1_Mountain
   m_EditorClassIdentifier: Assembly-CSharp::RescueScenarioData
   scenarioName: Mountain Search
-  totalDays: 4
-  rescueGroupsPerDay: 6
+  totalDays: 3
+  rescueGroupsPerDay: 4
   nodes:
   - nodeId: Camp
     parentNodeId: 
