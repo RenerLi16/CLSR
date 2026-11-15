@@ -79,6 +79,58 @@ public class ScenarioController : MonoBehaviour
         return CountNodeAndChildren(rootNodeId);
     }
 
+    public int CountTotalSurvivors()
+    {
+        int total = 0;
+
+        foreach (RescueNodeDefinition definition in scenario.nodes)
+        {
+            total += definition.survivorCount;
+        }
+
+        return total;
+    }
+
+    public RescueNodeDefinition GetDefinition(string nodeId)
+    {
+        return scenario.nodes.Find(node => node.nodeId == nodeId);
+    }
+
+    public bool TryGetSceneNode(string nodeId, out RescueNode sceneNode)
+    {
+        return sceneNodes.TryGetValue(nodeId, out sceneNode);
+    }
+
+    public List<RescueNodeDefinition> GetPathFromCamp(string targetNodeId)
+    {
+        List<RescueNodeDefinition> reversePath =
+            new List<RescueNodeDefinition>();
+        HashSet<string> visited = new HashSet<string>();
+
+        RescueNodeDefinition current = GetDefinition(targetNodeId);
+
+        while (current != null && current.nodeId != "Camp")
+        {
+            if (!visited.Add(current.nodeId))
+            {
+                Debug.LogError("Scenario contains a parent cycle at " + current.nodeId + ".");
+                return new List<RescueNodeDefinition>();
+            }
+
+            reversePath.Add(current);
+            current = GetDefinition(current.parentNodeId);
+        }
+
+        if (current == null)
+        {
+            Debug.LogError("Node " + targetNodeId + " does not connect back to Camp.");
+            return new List<RescueNodeDefinition>();
+        }
+
+        reversePath.Reverse();
+        return reversePath;
+    }
+
     private int CountNodeAndChildren(string nodeId)
     {
         RescueNodeDefinition definition =

@@ -38,6 +38,15 @@ public class RescuePlanningUI : MonoBehaviour
     [SerializeField]
     private TMP_Text assignmentText;
 
+    [SerializeField]
+    private TMP_Text branchText;
+
+    [SerializeField]
+    private TMP_Text rescuedText;
+
+    [SerializeField]
+    private TMP_Text resultText;
+
     private void Awake()
     {
         if (gameController == null)
@@ -97,6 +106,23 @@ public class RescuePlanningUI : MonoBehaviour
             "RESCUE GROUPS AVAILABLE: " +
             gameController.GroupsRemaining;
 
+        ScenarioController scenarioController =
+            gameController.GetComponent<ScenarioController>();
+
+        branchText.text =
+            "KNOWN SURVIVORS: A " +
+            scenarioController.CountBranchSurvivors("A") +
+            " | B " +
+            scenarioController.CountBranchSurvivors("B");
+
+        rescuedText.text =
+            "RESCUED: " +
+            gameController.TotalRescued +
+            " / " +
+            gameController.TotalSurvivors;
+
+        resultText.text = gameController.LastDaySummary;
+
         RescueNode selectedNode = null;
 
         if (NodeSelectionManager.Instance != null)
@@ -112,13 +138,41 @@ public class RescuePlanningUI : MonoBehaviour
             return;
         }
 
-        selectedText.text =
-            "SELECTED DESTINATION: " +
-            selectedNode.nodeId;
+        selectedText.text = BuildSelectedNodeText(selectedNode);
 
         assignmentText.text =
             "GROUPS ASSIGNED HERE: " +
             gameController.GetAssignedGroups(selectedNode.nodeId);
+    }
+
+    private static string BuildSelectedNodeText(RescueNode node)
+    {
+        if (!node.explored)
+        {
+            return "SELECTED: " + node.nodeId + " | UNEXPLORED";
+        }
+
+        if (!node.reached)
+        {
+            return
+                "SELECTED: " +
+                node.nodeId +
+                " | STOPPED | NEEDS " +
+                node.difficulty +
+                " GROUPS";
+        }
+
+        string rescueStatus =
+            node.survivorsRescued ? " | RESCUED" : string.Empty;
+
+        return
+            "SELECTED: " +
+            node.nodeId +
+            " | NEEDS " +
+            node.difficulty +
+            " | SURVIVORS " +
+            node.survivorCount +
+            rescueStatus;
     }
 
     private void BuildPrototypeInterface()
@@ -148,17 +202,20 @@ public class RescuePlanningUI : MonoBehaviour
         panelRect.anchorMax = Vector2.zero;
         panelRect.pivot = Vector2.zero;
         panelRect.anchoredPosition = new Vector2(30f, 30f);
-        panelRect.sizeDelta = new Vector2(520f, 300f);
+        panelRect.sizeDelta = new Vector2(580f, 390f);
 
-        dayText = CreateText(panel.transform, "DayText", 22f, -22f, 470f, 34f);
-        groupsText = CreateText(panel.transform, "GroupsText", 22f, -62f, 470f, 34f);
-        selectedText = CreateText(panel.transform, "SelectedText", 22f, -112f, 470f, 34f);
-        assignmentText = CreateText(panel.transform, "AssignmentText", 22f, -152f, 470f, 34f);
+        dayText = CreateText(panel.transform, "DayText", 22f, -18f, 536f, 30f);
+        groupsText = CreateText(panel.transform, "GroupsText", 22f, -50f, 536f, 30f);
+        branchText = CreateText(panel.transform, "BranchText", 22f, -82f, 536f, 30f);
+        selectedText = CreateText(panel.transform, "SelectedText", 22f, -124f, 536f, 30f);
+        assignmentText = CreateText(panel.transform, "AssignmentText", 22f, -156f, 536f, 30f);
+        rescuedText = CreateText(panel.transform, "RescuedText", 22f, -198f, 536f, 30f);
+        resultText = CreateText(panel.transform, "ResultText", 22f, -230f, 536f, 64f, true);
 
-        CreateButton(panel.transform, "RemoveGroupButton", "- GROUP", 22f, 74f, 145f, 48f, RemoveGroup);
-        CreateButton(panel.transform, "AddGroupButton", "+ GROUP", 177f, 74f, 145f, 48f, AddGroup);
-        CreateButton(panel.transform, "ClearPlanButton", "CLEAR PLAN", 332f, 74f, 166f, 48f, ClearPlan);
-        CreateButton(panel.transform, "BeginSearchButton", "BEGIN SEARCH", 22f, 18f, 476f, 46f, BeginSearch);
+        CreateButton(panel.transform, "RemoveGroupButton", "- GROUP", 22f, 74f, 165f, 48f, RemoveGroup);
+        CreateButton(panel.transform, "AddGroupButton", "+ GROUP", 197f, 74f, 165f, 48f, AddGroup);
+        CreateButton(panel.transform, "ClearPlanButton", "CLEAR PLAN", 372f, 74f, 186f, 48f, ClearPlan);
+        CreateButton(panel.transform, "BeginSearchButton", "BEGIN SEARCH", 22f, 18f, 536f, 46f, BeginSearch);
     }
 
     private static GameObject CreateUIObject(string objectName, Transform parent)
@@ -174,7 +231,8 @@ public class RescuePlanningUI : MonoBehaviour
         float x,
         float y,
         float width,
-        float height
+        float height,
+        bool wrap = false
     )
     {
         GameObject textObject = CreateUIObject(objectName, parent);
@@ -182,7 +240,8 @@ public class RescuePlanningUI : MonoBehaviour
         text.fontSize = 23f;
         text.color = new Color(0.92f, 0.95f, 0.96f, 1f);
         text.alignment = TextAlignmentOptions.MidlineLeft;
-        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.textWrappingMode =
+            wrap ? TextWrappingModes.Normal : TextWrappingModes.NoWrap;
 
         RectTransform rect = textObject.GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(0f, 1f);

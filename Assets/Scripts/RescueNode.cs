@@ -10,10 +10,14 @@ public class RescueNode : MonoBehaviour
     public int difficulty = 1;
     public int survivorCount = 0;
     public bool explored = false;
+    public bool reached = false;
+    public bool survivorsRescued = false;
 
     [Header("Interaction Colors")]
     public Color hoverColor = new Color(1f, 0.8f, 0.3f);
     public Color selectedColor = new Color(0.3f, 0.9f, 1f);
+    public Color exploredColor = new Color(0.35f, 0.75f, 0.4f);
+    public Color blockedColor = new Color(0.9f, 0.45f, 0.2f);
 
     private Renderer nodeRenderer;
     private Color normalColor;
@@ -68,6 +72,8 @@ public class RescueNode : MonoBehaviour
         difficulty = definition.difficulty;
         survivorCount = definition.survivorCount;
         explored = false;
+        reached = false;
+        survivorsRescued = false;
     }
     
     public void SetSelected(bool value)
@@ -82,6 +88,23 @@ public class RescueNode : MonoBehaviour
         {
             SetColor(mouseOver ? hoverColor : normalColor);
         }
+    }
+
+    public void RevealEncounter(bool passed)
+    {
+        explored = true;
+        reached = reached || passed;
+        normalColor = reached ? exploredColor : blockedColor;
+
+        if (!selected)
+        {
+            SetColor(mouseOver ? hoverColor : normalColor);
+        }
+    }
+
+    public void MarkSurvivorsRescued()
+    {
+        survivorsRescued = true;
     }
 
     private void SetColor(Color newColor)
