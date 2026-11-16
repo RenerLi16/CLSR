@@ -46,19 +46,6 @@ public class ScenarioController : MonoBehaviour
         scenario = Instantiate(sourceScenario);
         scenario.name = sourceScenario.name + " (runtime)";
 
-        if (scenario.buildMapFromLayout)
-        {
-            ScenarioMapBuilder builder = GetComponent<ScenarioMapBuilder>();
-
-            if (builder == null)
-            {
-                Debug.LogError("This scenario builds its map from layout, but no ScenarioMapBuilder is attached.");
-                return;
-            }
-
-            builder.Build(scenario);
-        }
-
         sceneNodes.Clear();
 
         RescueNode[] foundNodes = FindObjectsByType<RescueNode>();
