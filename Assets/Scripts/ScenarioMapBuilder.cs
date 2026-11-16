@@ -201,11 +201,8 @@ public class ScenarioMapBuilder : MonoBehaviour
         );
         sign.transform.SetParent(parent, true);
 
-        sign.Content =
-            "<b>" + branch.branchName.ToUpper() + "</b>\n" +
-            "Report: " + branch.reportedSurvivors +
-            (branch.reportedSurvivors == 1 ? " survivor" : " survivors") + "\n" +
-            "<color=#A8A8A8>" + branch.note + "</color>";
+        sign.gameObject.AddComponent<BranchSign>()
+            .Initialise(branch, GetComponent<ScenarioController>());
     }
 
     private static void SetMaterial(GameObject target, Material material)

@@ -47,6 +47,7 @@ public class RescuePlanningUI : MonoBehaviour
     private static readonly Color TextColor = Color.black;
     private static readonly Color ButtonColor = new Color(0.05f, 0.29f, 0.31f, 1f);
     private static readonly Color ButtonTextColor = Color.white;
+    private static readonly Color InactiveButtonColor = new Color(0.55f, 0.55f, 0.55f, 1f);
 
     private const float PanelWidth = 720f;
     private const float PanelHeight = 860f;
@@ -56,6 +57,10 @@ public class RescuePlanningUI : MonoBehaviour
 
     private Text todayText;
     private Text beginSearchLabel;
+    private Text noteText;
+    private Image playerViewButton;
+    private Image truthViewButton;
+    private ScenarioController scenarioController;
 
     private GameObject planningContent;
     private GameObject gameOverContent;
@@ -68,6 +73,8 @@ public class RescuePlanningUI : MonoBehaviour
         {
             gameController = GetComponent<RescueGameController>();
         }
+
+        scenarioController = FindAnyObjectByType<ScenarioController>();
 
         if (dayText == null)
         {
@@ -104,6 +111,18 @@ public class RescuePlanningUI : MonoBehaviour
         RefreshDisplay();
     }
 
+    public void ShowPlayerView()
+    {
+        DesignerView.TruthVisible = false;
+        RefreshDisplay();
+    }
+
+    public void ShowDesignerTruth()
+    {
+        DesignerView.TruthVisible = true;
+        RefreshDisplay();
+    }
+
     public void RestartGame()
     {
         gameController.RestartGame();
@@ -118,6 +137,12 @@ public class RescuePlanningUI : MonoBehaviour
         }
 
         bool gameOver = gameController.GameOver;
+
+        if (playerViewButton != null)
+        {
+            playerViewButton.color = DesignerView.TruthVisible ? InactiveButtonColor : ButtonColor;
+            truthViewButton.color = DesignerView.TruthVisible ? ButtonColor : InactiveButtonColor;
+        }
 
         if (planningContent != null)
         {
@@ -181,6 +206,8 @@ public class RescuePlanningUI : MonoBehaviour
                 NodeSelectionManager.Instance.SelectedNode;
         }
 
+        noteText.text = BuildNodeExplanation(selectedNode);
+
         if (selectedNode == null)
         {
             selectedText.text = "SELECTED LOCATION: <b>NONE</b>";
@@ -193,6 +220,39 @@ public class RescuePlanningUI : MonoBehaviour
         selectedText.text =
             "SELECTED LOCATION: <b>" + selectedNode.nodeId.ToUpper() + "</b>";
         assignmentText.text = BuildSelectedNodeDetails(selectedNode);
+    }
+
+    private string BuildNodeExplanation(RescueNode node)
+    {
+        bool truth = DesignerView.TruthVisible;
+        string truthColor = "<color=#" + DesignerView.TruthOnLightHex + ">";
+
+        if (node == null)
+        {
+            return truth
+                ? truthColor + "Designer truth is visible. Select a node for its hidden values.</color>"
+                : "Select a node to see what players know about it.";
+        }
+
+        RescueNodeDefinition definition =
+            scenarioController != null ? scenarioController.GetDefinition(node.nodeId) : null;
+
+        if (truth)
+        {
+            string truthNote =
+                definition != null && !string.IsNullOrWhiteSpace(definition.truthNote)
+                    ? definition.truthNote
+                    : "DIFF " + node.difficulty + " · HERE " + node.survivorCount + ".";
+
+            return truthColor + "<b>Truth:</b> " + truthNote + "</color>";
+        }
+
+        string playerNote =
+            definition != null && !string.IsNullOrWhiteSpace(definition.playerNote)
+                ? definition.playerNote
+                : "No report for this location.";
+
+        return "<b>Intel:</b> " + playerNote;
     }
 
     private string BuildSelectedNodeDetails(RescueNode node)
@@ -271,10 +331,13 @@ public class RescuePlanningUI : MonoBehaviour
         selectedText = CreateText(planningContent.transform, "SelectedText", pad, -142f, contentWidth, 46f, false, 32);
         assignmentText = CreateText(planningContent.transform, "AssignmentText", pad, -194f, contentWidth, 84f, true, 29, TextAnchor.UpperLeft);
 
-        rescuedText = CreateText(planningContent.transform, "RescuedText", pad, -296f, contentWidth, 50f, false, 36, TextAnchor.MiddleLeft, true);
+        noteText = CreateText(planningContent.transform, "NoteText", pad, -284f, contentWidth, 80f, true, 24, TextAnchor.UpperLeft);
+        noteText.color = new Color(0.27f, 0.27f, 0.27f, 1f);
+
+        rescuedText = CreateText(planningContent.transform, "RescuedText", pad, -372f, contentWidth, 50f, false, 36, TextAnchor.MiddleLeft, true);
 
         float buttonsTop = pad + buttonHeight * 2f + gap;
-        float resultTop = 366f;
+        float resultTop = 440f;
         resultText = CreateText(planningContent.transform, "ResultText", pad, -resultTop, contentWidth, PanelHeight - resultTop - buttonsTop - 24f, true, 28, TextAnchor.UpperLeft);
 
         float smallWidth = (contentWidth - gap * 2f) / 3f;
@@ -288,6 +351,19 @@ public class RescuePlanningUI : MonoBehaviour
         gameOverScoreText = CreateText(gameOverContent.transform, "GameOverScore", pad, -270f, contentWidth, 110f, true, 36, TextAnchor.MiddleCenter);
         CreateButton(gameOverContent.transform, "RestartButton", "RESTART", (PanelWidth - 420f) / 2f, 110f, 420f, 72f, RestartGame, 34);
         gameOverContent.SetActive(false);
+
+        if (DesignerView.Available)
+        {
+            // Player view / Designer truth toggle, just above the panel.
+            const float toggleHeight = 56f;
+            float toggleY = 30f + PanelHeight + 10f;
+            float toggleWidth = (PanelWidth - gap) / 2f;
+
+            playerViewButton = CreateButton(canvasObject.transform, "PlayerViewButton", "PLAYER VIEW", 30f, toggleY, toggleWidth, toggleHeight, ShowPlayerView, 26)
+                .GetComponent<Image>();
+            truthViewButton = CreateButton(canvasObject.transform, "DesignerTruthButton", "DESIGNER TRUTH", 30f + toggleWidth + gap, toggleY, toggleWidth, toggleHeight, ShowDesignerTruth, 26)
+                .GetComponent<Image>();
+        }
     }
 
     private static GameObject CreateStretchContainer(string objectName, Transform parent)

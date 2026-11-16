@@ -66,6 +66,9 @@ public class BranchReport
 {
     public string branchName;
 
+    [Tooltip("First node of the branch; used to show the true count in Designer truth view.")]
+    public string rootNodeId;
+
     [Tooltip("Survivor count the public report claims for this branch.")]
     [Min(0)]
     public int reportedSurvivors;
@@ -122,4 +125,13 @@ public class RescueNodeDefinition
 
     [Tooltip("Where the storage camp marker stands, if this node has a logistics reward.")]
     public Vector2 storageLayoutPosition;
+
+    [Header("Explanations")]
+    [Tooltip("Player view: what players know about this node at the start.")]
+    [TextArea(2, 4)]
+    public string playerNote;
+
+    [Tooltip("Designer truth: what is actually there.")]
+    [TextArea(2, 4)]
+    public string truthNote;
 }

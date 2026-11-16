@@ -65,9 +65,20 @@ public class RescueNodeLabel : MonoBehaviour
 
     private static string Line(string name, bool known, int value)
     {
-        return known
-            ? name + ": <color=#" + KnownHex + ">" + value + "</color>"
-            : "<color=#" + UnknownHex + ">" + name + ": ?</color>";
+        if (known)
+        {
+            return name + ": <color=#" + KnownHex + ">" + value + "</color>";
+        }
+
+        // Designer truth: show the hidden value in purple so it is clear
+        // that players cannot see it yet.
+        if (DesignerView.TruthVisible)
+        {
+            return "<color=#" + UnknownHex + ">" + name + ":</color> <color=#" +
+                DesignerView.TruthHex + ">" + value + "</color>";
+        }
+
+        return "<color=#" + UnknownHex + ">" + name + ": ?</color>";
     }
 
     private void OnDestroy()
