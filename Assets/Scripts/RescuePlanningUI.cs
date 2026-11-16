@@ -212,14 +212,14 @@ public class RescuePlanningUI : MonoBehaviour
         if (!node.reached)
         {
             return
-                "Status: <b>Route not passed</b>" +
+                "Status: <b>Blocked · needs " + node.difficulty + " points</b>" +
                 "\nPoints assigned: <b>" +
                 assignedGroups +
                 "</b>";
         }
 
         return
-            "Status: <b>Reached</b>" +
+            "Status: <b>Passed</b>" +
             "\nPoints assigned: <b>" +
             assignedGroups +
             "</b>";

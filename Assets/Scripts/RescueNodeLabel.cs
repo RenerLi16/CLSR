@@ -10,6 +10,13 @@ public class RescueNodeLabel : MonoBehaviour
     private static readonly Color KnownColor =
         new Color(0.094f, 0.702f, 0.541f, 1f);
 
+    private static readonly string UnknownHex = ColorUtility.ToHtmlStringRGB(UnknownColor);
+    private static readonly string KnownHex = ColorUtility.ToHtmlStringRGB(KnownColor);
+
+    // Label sits above and to the right of its node; its bottom edge stays
+    // just above the node so the node itself is never covered.
+    private static readonly Vector3 LabelOffset = new Vector3(0.85f, 1.1f, 0f);
+
     private RescueNode rescueNode;
     private ScenarioController scenarioController;
     private GameObject labelObject;
@@ -36,34 +43,31 @@ public class RescueNodeLabel : MonoBehaviour
             return;
         }
 
-        bool informationKnown =
-            scenarioController.IsNodeInformationKnown(rescueNode.nodeId);
+        string nodeId = rescueNode.nodeId;
+        bool survivorsKnown = scenarioController.AreSurvivorCountsKnown(nodeId);
+        bool difficultyKnown = scenarioController.IsDifficultyKnown(nodeId);
+        RescueNodeDefinition definition = scenarioController.GetDefinition(nodeId);
 
-        if (informationKnown)
-        {
-            labelText.text =
-                "NUM: " +
-                scenarioController.CountRemainingBranchSurvivors(
-                    rescueNode.nodeId
-                ) +
-                "\nDIFF: " +
-                rescueNode.difficulty;
-            labelText.color = KnownColor;
-        }
-        else
-        {
-            labelText.text = "NUM: NAN\nDIFF: NAN";
-            labelText.color = UnknownColor;
-        }
+        labelText.text =
+            Line("HERE", survivorsKnown, scenarioController.CountRemainingHere(nodeId)) + "\n" +
+            Line("BEYOND", survivorsKnown, scenarioController.CountRemainingBeyond(nodeId)) + "\n" +
+            Line("DIFF", difficultyKnown, definition != null ? definition.difficulty : 0);
 
         Camera activeCamera = Camera.main;
 
         if (activeCamera != null)
         {
             labelTransform.position =
-                transform.position + new Vector3(0.85f, 0.9f, 0f);
+                transform.position + LabelOffset;
             labelTransform.rotation = activeCamera.transform.rotation;
         }
+    }
+
+    private static string Line(string name, bool known, int value)
+    {
+        return known
+            ? name + ": <color=#" + KnownHex + ">" + value + "</color>"
+            : "<color=#" + UnknownHex + ">" + name + ": ?</color>";
     }
 
     private void OnDestroy()
@@ -86,9 +90,9 @@ public class RescueNodeLabel : MonoBehaviour
 
         labelTransform = labelObject.GetComponent<RectTransform>();
         labelTransform.position =
-            transform.position + new Vector3(0.85f, 0.9f, 0f);
+            transform.position + LabelOffset;
         labelTransform.localScale = Vector3.one * 0.0083f;
-        labelTransform.sizeDelta = new Vector2(330f, 142f);
+        labelTransform.sizeDelta = new Vector2(330f, 190f);
 
         Canvas canvas = labelObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
@@ -129,12 +133,12 @@ public class RescueNodeLabel : MonoBehaviour
         labelText = textObject.GetComponent<Text>();
         labelText.font =
             Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        labelText.fontSize = 50;
+        labelText.fontSize = 44;
         labelText.alignment = TextAnchor.MiddleLeft;
         labelText.horizontalOverflow = HorizontalWrapMode.Overflow;
         labelText.verticalOverflow = VerticalWrapMode.Overflow;
         labelText.raycastTarget = false;
-        labelText.text = "NUM: NAN\nDIFF: NAN";
-        labelText.color = UnknownColor;
+        labelText.text = Line("HERE", false, 0) + "\n" + Line("BEYOND", false, 0) + "\n" + Line("DIFF", false, 0);
+        labelText.color = Color.white;
     }
 }

@@ -128,34 +128,62 @@ public class ScenarioController : MonoBehaviour
         return remainingAtNode;
     }
 
-    public bool IsNodeInformationKnown(string nodeId)
+    // ----- What the player is allowed to know -----
+    //
+    // DIFF  is revealed once any expedition reaches the node, whether it got
+    //       past or was blocked there. A blocked team reveals nothing else.
+    // HERE and BEYOND are revealed only once a team has passed the node, so
+    //       deeper information unlocks step by step along a branch.
+
+    public bool IsDifficultyKnown(string nodeId)
+    {
+        return
+            sceneNodes.TryGetValue(nodeId, out RescueNode sceneNode) &&
+            sceneNode.explored;
+    }
+
+    public bool AreSurvivorCountsKnown(string nodeId)
+    {
+        return
+            sceneNodes.TryGetValue(nodeId, out RescueNode sceneNode) &&
+            sceneNode.reached;
+    }
+
+    /// <summary>Survivors still waiting at this node itself.</summary>
+    public int CountRemainingHere(string nodeId)
     {
         RescueNodeDefinition definition = GetDefinition(nodeId);
 
-        if (definition == null || definition.nodeId == "Camp")
+        if (definition == null)
         {
-            return false;
+            return 0;
         }
 
         if (
             sceneNodes.TryGetValue(nodeId, out RescueNode sceneNode) &&
-            sceneNode.explored
+            sceneNode.survivorsRescued
         )
         {
-            return true;
+            return 0;
         }
 
-        if (definition.parentNodeId == "Camp")
+        return definition.survivorCount;
+    }
+
+    /// <summary>Survivors still waiting further along the branch past this node.</summary>
+    public int CountRemainingBeyond(string nodeId)
+    {
+        int total = 0;
+
+        foreach (RescueNodeDefinition possibleChild in scenario.nodes)
         {
-            return true;
+            if (possibleChild.parentNodeId == nodeId)
+            {
+                total += CountRemainingBranchSurvivors(possibleChild.nodeId);
+            }
         }
 
-        return
-            sceneNodes.TryGetValue(
-                definition.parentNodeId,
-                out RescueNode parentNode
-            ) &&
-            parentNode.explored;
+        return total;
     }
 
     public int CountTotalSurvivors()
