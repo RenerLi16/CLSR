@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RescueScenarioData
   scenarioName: Mountain Search
   totalDays: 3
-  rescueGroupsPerDay: 4
+  totalLogisticsPoints: 12
+  dailyDeploymentCap: 4
+  maxExpeditionsPerDay: 4
   nodes:
   - nodeId: Camp
     parentNodeId: 

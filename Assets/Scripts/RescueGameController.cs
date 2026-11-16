@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class RescueGameController : MonoBehaviour
 {
+    private const string StartingSummary =
+        "Select destinations and assign logistics points.";
+
     [Header("Required Components")]
     [SerializeField]
     private ScenarioController scenarioController;
@@ -12,8 +15,13 @@ public class RescueGameController : MonoBehaviour
     [SerializeField]
     private int currentDay = 1;
 
+    [Tooltip("Logistics points not yet deployed. Deployed points are spent permanently.")]
     [SerializeField]
-    private int groupsRemaining;
+    private int logisticsPool;
+
+    [Tooltip("Storage camp points earned today; they arrive at the start of the next day.")]
+    [SerializeField]
+    private int pendingLogistics;
 
     [SerializeField]
     private List<ExpeditionAssignment> plannedAssignments =
@@ -32,25 +40,60 @@ public class RescueGameController : MonoBehaviour
     private readonly HashSet<string> rescuedNodeIds =
         new HashSet<string>();
 
-    public string LastDaySummary { get; private set; } =
-        "Select destinations and assign rescue groups.";
+    private readonly HashSet<string> claimedCacheIds =
+        new HashSet<string>();
+
+    public string LastDaySummary { get; private set; } = StartingSummary;
 
     public int CurrentDay
     {
         get { return currentDay; }
     }
 
-    public int GroupsRemaining
+    public int TotalDays
     {
-        get { return groupsRemaining; }
+        get { return scenarioController.CurrentScenario.totalDays; }
     }
 
-    public int TotalDays
+    /// <summary>Points still available to plan with (pool minus today's plan).</summary>
+    public int LogisticsRemaining
+    {
+        get { return logisticsPool - PointsPlannedToday; }
+    }
+
+    public int PendingLogistics
+    {
+        get { return pendingLogistics; }
+    }
+
+    public int PointsPlannedToday
     {
         get
         {
-            return scenarioController.CurrentScenario.totalDays;
+            int total = 0;
+
+            foreach (ExpeditionAssignment assignment in plannedAssignments)
+            {
+                total += assignment.assignedGroups;
+            }
+
+            return total;
         }
+    }
+
+    public int DailyDeploymentCap
+    {
+        get { return scenarioController.CurrentScenario.dailyDeploymentCap; }
+    }
+
+    public int ExpeditionsPlannedToday
+    {
+        get { return plannedAssignments.Count; }
+    }
+
+    public int MaxExpeditionsPerDay
+    {
+        get { return scenarioController.CurrentScenario.maxExpeditionsPerDay; }
     }
 
     public IReadOnlyList<ExpeditionAssignment> PlannedAssignments
@@ -91,45 +134,30 @@ public class RescueGameController : MonoBehaviour
             return;
         }
 
-        currentDay = 1;
-        groupsRemaining = scenarioController.CurrentScenario.rescueGroupsPerDay;
-
-        plannedAssignments.Clear();
-        lastDayResults.Clear();
-        rescuedNodeIds.Clear();
-        totalRescued = 0;
-        gameOver = false;
-        LastDaySummary = "Select destinations and assign rescue groups.";
-
-        PrintCurrentState();
+        ResetState();
     }
 
     public void AddGroupToSelectedNode()
     {
-        if (gameOver)
-        {
-            Debug.LogWarning("The search has already ended.");
-            return;
-        }
-
-        if (NodeSelectionManager.Instance == null)
-        {
-            Debug.LogWarning("Node selection is unavailable.");
-            return;
-        }
-
-        RescueNode selectedNode =
-            NodeSelectionManager.Instance.SelectedNode;
+        RescueNode selectedNode = GetSelectedNodeForPlanning();
 
         if (selectedNode == null)
         {
-            Debug.LogWarning("Select a destination first.");
             return;
         }
 
-        if (groupsRemaining <= 0)
+        if (LogisticsRemaining <= 0)
         {
-            Debug.LogWarning("No rescue groups remain today.");
+            Debug.LogWarning("No logistics points remain.");
+            return;
+        }
+
+        if (PointsPlannedToday >= DailyDeploymentCap)
+        {
+            Debug.LogWarning(
+                "Daily cap reached: at most " + DailyDeploymentCap +
+                " logistics points can be deployed per day."
+            );
             return;
         }
 
@@ -138,41 +166,33 @@ public class RescueGameController : MonoBehaviour
 
         if (assignment == null)
         {
+            if (plannedAssignments.Count >= MaxExpeditionsPerDay)
+            {
+                Debug.LogWarning(
+                    "At most " + MaxExpeditionsPerDay +
+                    " expeditions can be launched per day."
+                );
+                return;
+            }
+
             assignment = new ExpeditionAssignment
             {
                 targetNodeId = selectedNode.nodeId,
                 assignedGroups = 0
             };
-
             plannedAssignments.Add(assignment);
         }
 
         assignment.assignedGroups++;
-        groupsRemaining--;
-
         PrintCurrentState();
     }
 
     public void RemoveGroupFromSelectedNode()
     {
-        if (gameOver)
-        {
-            Debug.LogWarning("The search has already ended.");
-            return;
-        }
-
-        if (NodeSelectionManager.Instance == null)
-        {
-            Debug.LogWarning("Node selection is unavailable.");
-            return;
-        }
-
-        RescueNode selectedNode =
-            NodeSelectionManager.Instance.SelectedNode;
+        RescueNode selectedNode = GetSelectedNodeForPlanning();
 
         if (selectedNode == null)
         {
-            Debug.LogWarning("Select a destination first.");
             return;
         }
 
@@ -182,13 +202,12 @@ public class RescueGameController : MonoBehaviour
         if (assignment == null || assignment.assignedGroups <= 0)
         {
             Debug.LogWarning(
-                "No groups are assigned to " + selectedNode.nodeId + "."
+                "No logistics points are assigned to " + selectedNode.nodeId + "."
             );
             return;
         }
 
         assignment.assignedGroups--;
-        groupsRemaining++;
 
         if (assignment.assignedGroups == 0)
         {
@@ -206,13 +225,13 @@ public class RescueGameController : MonoBehaviour
         }
 
         plannedAssignments.Clear();
-
-        groupsRemaining =
-            scenarioController.CurrentScenario.rescueGroupsPerDay;
-
         PrintCurrentState();
     }
 
+    /// <summary>
+    /// Launches today's expeditions (an empty plan simply ends the day),
+    /// spends the deployed points and advances to the next day.
+    /// </summary>
     public void ConfirmPlan()
     {
         if (gameOver)
@@ -221,15 +240,9 @@ public class RescueGameController : MonoBehaviour
             return;
         }
 
-        if (plannedAssignments.Count == 0)
-        {
-            Debug.LogWarning(
-                "Assign at least one rescue group before confirming."
-            );
-            return;
-        }
-
         lastDayResults.Clear();
+        logisticsPool -= PointsPlannedToday;
+
         foreach (ExpeditionAssignment assignment in plannedAssignments)
         {
             lastDayResults.Add(ResolveAssignment(assignment));
@@ -243,7 +256,6 @@ public class RescueGameController : MonoBehaviour
         if (currentDay >= TotalDays)
         {
             gameOver = true;
-            groupsRemaining = 0;
             LastDaySummary +=
                 " Search complete: " +
                 totalRescued +
@@ -254,43 +266,74 @@ public class RescueGameController : MonoBehaviour
         }
 
         currentDay++;
-        groupsRemaining =
-            scenarioController.CurrentScenario.rescueGroupsPerDay;
+
+        if (pendingLogistics > 0)
+        {
+            logisticsPool += pendingLogistics;
+            LastDaySummary +=
+                " +" + pendingLogistics +
+                " logistics " + (pendingLogistics == 1 ? "point" : "points") +
+                " arrived from storage camps.";
+            pendingLogistics = 0;
+        }
+
+        PrintCurrentState();
     }
 
     public void RestartGame()
     {
-        currentDay = 1;
-        groupsRemaining =
-            scenarioController.CurrentScenario.rescueGroupsPerDay;
-
-        plannedAssignments.Clear();
-        lastDayResults.Clear();
-        rescuedNodeIds.Clear();
-        totalRescued = 0;
-        gameOver = false;
-        LastDaySummary = "Select destinations and assign rescue groups.";
-
+        ResetState();
         scenarioController.ResetSceneNodes();
 
         if (NodeSelectionManager.Instance != null)
         {
             NodeSelectionManager.Instance.ClearSelection();
         }
-
-        PrintCurrentState();
     }
 
     public int GetAssignedGroups(string nodeId)
     {
         ExpeditionAssignment assignment = FindAssignment(nodeId);
+        return assignment == null ? 0 : assignment.assignedGroups;
+    }
 
-        if (assignment == null)
+    private void ResetState()
+    {
+        currentDay = 1;
+        logisticsPool = scenarioController.CurrentScenario.totalLogisticsPoints;
+        pendingLogistics = 0;
+        plannedAssignments.Clear();
+        lastDayResults.Clear();
+        rescuedNodeIds.Clear();
+        claimedCacheIds.Clear();
+        totalRescued = 0;
+        gameOver = false;
+        LastDaySummary = StartingSummary;
+        PrintCurrentState();
+    }
+
+    private RescueNode GetSelectedNodeForPlanning()
+    {
+        if (gameOver)
         {
-            return 0;
+            Debug.LogWarning("The search has already ended.");
+            return null;
         }
 
-        return assignment.assignedGroups;
+        if (NodeSelectionManager.Instance == null)
+        {
+            Debug.LogWarning("Node selection is unavailable.");
+            return null;
+        }
+
+        RescueNode selectedNode = NodeSelectionManager.Instance.SelectedNode;
+
+        if (selectedNode == null)
+        {
+            Debug.LogWarning("Select a destination first.");
+        }
+
+        return selectedNode;
     }
 
     private ExpeditionAssignment FindAssignment(string nodeId)
@@ -321,7 +364,9 @@ public class RescueGameController : MonoBehaviour
         {
             bool canPass = assignment.assignedGroups >= definition.difficulty;
 
-            if (scenarioController.TryGetSceneNode(definition.nodeId, out RescueNode sceneNode))
+            scenarioController.TryGetSceneNode(definition.nodeId, out RescueNode sceneNode);
+
+            if (sceneNode != null)
             {
                 sceneNode.RevealEncounter(canPass);
             }
@@ -350,6 +395,16 @@ public class RescueGameController : MonoBehaviour
                     sceneNode.MarkSurvivorsRescued();
                 }
             }
+
+            if (
+                definition.logisticsReward > 0 &&
+                claimedCacheIds.Add(definition.nodeId)
+            )
+            {
+                result.cacheNodeIds.Add(definition.nodeId);
+                result.logisticsEarned += definition.logisticsReward;
+                pendingLogistics += definition.logisticsReward;
+            }
         }
 
         result.reachedTarget = true;
@@ -358,10 +413,19 @@ public class RescueGameController : MonoBehaviour
 
     private string BuildDaySummary()
     {
+        if (lastDayResults.Count == 0)
+        {
+            return "No expeditions were launched.";
+        }
+
         List<string> summaries = new List<string>();
 
         foreach (ExpeditionResult result in lastDayResults)
         {
+            string team =
+                "Team of " + result.assignedGroups +
+                (result.assignedGroups == 1 ? " point" : " points");
+
             if (result.invalidRoute)
             {
                 summaries.Add("Route to " + result.targetNodeId + " was invalid.");
@@ -369,31 +433,43 @@ public class RescueGameController : MonoBehaviour
             else if (!string.IsNullOrEmpty(result.stoppedAtNodeId))
             {
                 summaries.Add(
-                    "Team heading to " +
+                    team + " heading to " +
                     result.targetNodeId +
                     " stopped at " +
                     result.stoppedAtNodeId +
-                    "; it requires " +
+                    "; it needs " +
                     result.requiredGroups +
-                    " groups."
+                    " points to pass." +
+                    (result.rescuedSurvivors > 0
+                        ? " Rescued " + result.rescuedSurvivors + " on the way."
+                        : "")
                 );
             }
             else if (result.rescuedSurvivors > 0)
             {
                 summaries.Add(
-                    "Team reached " +
+                    team + " reached " +
                     result.targetNodeId +
                     " and rescued " +
                     result.rescuedSurvivors +
-                    " survivors."
+                    (result.rescuedSurvivors == 1 ? " survivor." : " survivors.")
                 );
             }
             else
             {
                 summaries.Add(
-                    "Team reached " +
+                    team + " reached " +
                     result.targetNodeId +
                     ". No new survivors found."
+                );
+            }
+
+            if (result.logisticsEarned > 0)
+            {
+                summaries.Add(
+                    "Storage camp secured: +" + result.logisticsEarned +
+                    " logistics " + (result.logisticsEarned == 1 ? "point" : "points") +
+                    " tomorrow."
                 );
             }
         }
@@ -405,7 +481,10 @@ public class RescueGameController : MonoBehaviour
     {
         Debug.Log(
             "Day " + currentDay +
-            " | Groups remaining: " + groupsRemaining
+            " | Logistics left: " + LogisticsRemaining +
+            " | Planned today: " + PointsPlannedToday + "/" + DailyDeploymentCap +
+            " | Expeditions: " + ExpeditionsPlannedToday + "/" + MaxExpeditionsPerDay +
+            (pendingLogistics > 0 ? " | Arriving tomorrow: " + pendingLogistics : "")
         );
     }
 }
@@ -414,6 +493,8 @@ public class RescueGameController : MonoBehaviour
 public class ExpeditionAssignment
 {
     public string targetNodeId;
+
+    [Tooltip("Logistics points deployed on this expedition.")]
     public int assignedGroups;
 }
 
@@ -427,6 +508,8 @@ public class ExpeditionResult
     public string stoppedAtNodeId;
     public int requiredGroups;
     public int rescuedSurvivors;
+    public int logisticsEarned;
     public List<string> encounteredNodeIds = new List<string>();
     public List<string> reachedNodeIds = new List<string>();
+    public List<string> cacheNodeIds = new List<string>();
 }

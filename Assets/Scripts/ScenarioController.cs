@@ -230,9 +230,9 @@ public class ScenarioController : MonoBehaviour
             valid = false;
         }
 
-        if (scenario.rescueGroupsPerDay < 1)
+        if (scenario.dailyDeploymentCap < 1 || scenario.maxExpeditionsPerDay < 1)
         {
-            Debug.LogError("Scenario must provide at least one rescue group per day.");
+            Debug.LogError("Scenario must allow at least one logistics point and one expedition per day.");
             valid = false;
         }
 
@@ -251,7 +251,11 @@ public class ScenarioController : MonoBehaviour
                 valid = false;
             }
 
-            if (definition.difficulty < 0 || definition.survivorCount < 0)
+            if (
+                definition.difficulty < 0 ||
+                definition.survivorCount < 0 ||
+                definition.logisticsReward < 0
+            )
             {
                 Debug.LogError("Node " + definition.nodeId + " contains a negative value.");
                 valid = false;

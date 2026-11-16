@@ -54,6 +54,9 @@ public class RescuePlanningUI : MonoBehaviour
 
     public RectTransform PanelRect { get; private set; }
 
+    private Text todayText;
+    private Text beginSearchLabel;
+
     private GameObject planningContent;
     private GameObject gameOverContent;
     private Text gameOverTitleText;
@@ -140,8 +143,25 @@ public class RescuePlanningUI : MonoBehaviour
             gameController.TotalDays;
 
         groupsText.text =
-            "GROUPS LEFT: " +
-            gameController.GroupsRemaining;
+            "POINTS LEFT: " +
+            gameController.LogisticsRemaining;
+
+        todayText.text =
+            "Today: <b>" +
+            gameController.PointsPlannedToday + " / " +
+            gameController.DailyDeploymentCap +
+            "</b> points · <b>" +
+            gameController.ExpeditionsPlannedToday + " / " +
+            gameController.MaxExpeditionsPerDay +
+            "</b> expeditions" +
+            (gameController.PendingLogistics > 0
+                ? " · <b>+" + gameController.PendingLogistics + "</b> tomorrow"
+                : "");
+
+        beginSearchLabel.text =
+            gameController.ExpeditionsPlannedToday > 0
+                ? "BEGIN SEARCH"
+                : "END DAY";
 
         rescuedText.text =
             "TOTAL RESCUED: " +
@@ -166,7 +186,7 @@ public class RescuePlanningUI : MonoBehaviour
             selectedText.text = "SELECTED LOCATION: <b>NONE</b>";
             assignmentText.text =
                 "Status: <b>No location selected</b>\n" +
-                "Assigned today: <b>0</b>";
+                "Points assigned: <b>0</b>";
             return;
         }
 
@@ -184,7 +204,7 @@ public class RescuePlanningUI : MonoBehaviour
         {
             return
                 "Status: <b>Unexplored</b>\n" +
-                "Assigned today: <b>" +
+                "Points assigned: <b>" +
                 assignedGroups +
                 "</b>";
         }
@@ -193,14 +213,14 @@ public class RescuePlanningUI : MonoBehaviour
         {
             return
                 "Status: <b>Route not passed</b>" +
-                "\nAssigned today: <b>" +
+                "\nPoints assigned: <b>" +
                 assignedGroups +
                 "</b>";
         }
 
         return
             "Status: <b>Reached</b>" +
-            "\nAssigned today: <b>" +
+            "\nPoints assigned: <b>" +
             assignedGroups +
             "</b>";
     }
@@ -246,20 +266,23 @@ public class RescuePlanningUI : MonoBehaviour
         dayText = CreateText(planningContent.transform, "DayText", pad, -26f, 330f, 56f, false, 44, TextAnchor.MiddleLeft, true);
         groupsText = CreateText(planningContent.transform, "GroupsText", pad + 330f, -26f, contentWidth - 330f, 56f, false, 32, TextAnchor.MiddleRight, true);
 
-        selectedText = CreateText(planningContent.transform, "SelectedText", pad, -108f, contentWidth, 46f, false, 32);
-        assignmentText = CreateText(planningContent.transform, "AssignmentText", pad, -162f, contentWidth, 84f, true, 29, TextAnchor.UpperLeft);
+        todayText = CreateText(planningContent.transform, "TodayText", pad, -86f, contentWidth, 38f, false, 26);
 
-        rescuedText = CreateText(planningContent.transform, "RescuedText", pad, -272f, contentWidth, 50f, false, 36, TextAnchor.MiddleLeft, true);
+        selectedText = CreateText(planningContent.transform, "SelectedText", pad, -142f, contentWidth, 46f, false, 32);
+        assignmentText = CreateText(planningContent.transform, "AssignmentText", pad, -194f, contentWidth, 84f, true, 29, TextAnchor.UpperLeft);
+
+        rescuedText = CreateText(planningContent.transform, "RescuedText", pad, -296f, contentWidth, 50f, false, 36, TextAnchor.MiddleLeft, true);
 
         float buttonsTop = pad + buttonHeight * 2f + gap;
-        float resultTop = 346f;
+        float resultTop = 366f;
         resultText = CreateText(planningContent.transform, "ResultText", pad, -resultTop, contentWidth, PanelHeight - resultTop - buttonsTop - 24f, true, 28, TextAnchor.UpperLeft);
 
         float smallWidth = (contentWidth - gap * 2f) / 3f;
-        CreateButton(planningContent.transform, "RemoveGroupButton", "- GROUP", pad, pad + buttonHeight + gap, smallWidth, buttonHeight, RemoveGroup);
-        CreateButton(planningContent.transform, "AddGroupButton", "+ GROUP", pad + smallWidth + gap, pad + buttonHeight + gap, smallWidth, buttonHeight, AddGroup);
+        CreateButton(planningContent.transform, "RemoveGroupButton", "- POINT", pad, pad + buttonHeight + gap, smallWidth, buttonHeight, RemoveGroup);
+        CreateButton(planningContent.transform, "AddGroupButton", "+ POINT", pad + smallWidth + gap, pad + buttonHeight + gap, smallWidth, buttonHeight, AddGroup);
         CreateButton(planningContent.transform, "ClearPlanButton", "CLEAR PLAN", pad + (smallWidth + gap) * 2f, pad + buttonHeight + gap, smallWidth, buttonHeight, ClearPlan);
-        CreateButton(planningContent.transform, "BeginSearchButton", "BEGIN SEARCH", pad, pad, contentWidth, buttonHeight, BeginSearch, 34);
+        beginSearchLabel = CreateButton(planningContent.transform, "BeginSearchButton", "BEGIN SEARCH", pad, pad, contentWidth, buttonHeight, BeginSearch, 34)
+            .GetComponentInChildren<Text>();
 
         gameOverTitleText = CreateText(gameOverContent.transform, "GameOverTitle", pad, -180f, contentWidth, 70f, false, 46, TextAnchor.MiddleCenter, true);
         gameOverScoreText = CreateText(gameOverContent.transform, "GameOverScore", pad, -270f, contentWidth, 110f, true, 36, TextAnchor.MiddleCenter);
