@@ -265,13 +265,19 @@ public class RescueGameController : MonoBehaviour
             return;
         }
 
+        int finishedDay = currentDay;
         currentDay++;
+
+        foreach (string report in scenarioController.ApplyIntelligenceReports(finishedDay))
+        {
+            LastDaySummary += "\n<b>Intelligence report:</b> " + report;
+        }
 
         if (pendingLogistics > 0)
         {
             logisticsPool += pendingLogistics;
             LastDaySummary +=
-                " +" + pendingLogistics +
+                "\n+" + pendingLogistics +
                 " logistics " + (pendingLogistics == 1 ? "point" : "points") +
                 " arrived from storage camps.";
             pendingLogistics = 0;
@@ -289,6 +295,11 @@ public class RescueGameController : MonoBehaviour
         {
             NodeSelectionManager.Instance.ClearSelection();
         }
+    }
+
+    public bool IsStorageCampClaimed(string nodeId)
+    {
+        return claimedCacheIds.Contains(nodeId);
     }
 
     public int GetAssignedGroups(string nodeId)
@@ -309,6 +320,14 @@ public class RescueGameController : MonoBehaviour
         totalRescued = 0;
         gameOver = false;
         LastDaySummary = StartingSummary;
+
+        string briefing = scenarioController.CurrentScenario.briefing;
+
+        if (!string.IsNullOrWhiteSpace(briefing))
+        {
+            LastDaySummary += "\n" + briefing;
+        }
+
         PrintCurrentState();
     }
 

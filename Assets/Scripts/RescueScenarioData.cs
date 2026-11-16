@@ -25,9 +25,72 @@ public class RescueScenarioData : ScriptableObject
     [Min(1)]
     public int maxExpeditionsPerDay = 2;
 
+    [Header("Briefing")]
+    [Tooltip("Shown in the LAST SEARCH box before the first search.")]
+    [TextArea(2, 4)]
+    public string briefing;
+
+    [Tooltip("Public reports shown above each branch. Reported counts may differ from the truth.")]
+    public List<BranchReport> branches = new List<BranchReport>();
+
+    [Tooltip("Fixed reports that change the map at the start of a later day.")]
+    public List<IntelligenceReport> intelligenceReports = new List<IntelligenceReport>();
+
+    [Header("Map Layout")]
+    [Tooltip("Build nodes, trails, storage camps and branch signs at runtime from the layout positions below, instead of using objects placed in the scene.")]
+    public bool buildMapFromLayout;
+
+    [Tooltip("World units per layout unit.")]
+    public float layoutScale = 0.03f;
+
+    [Tooltip("Layout position (x right, y down) that maps to the world origin.")]
+    public Vector2 layoutOrigin = new Vector2(500f, 555f);
+
     [Header("Hidden Map Data")]
     public List<RescueNodeDefinition> nodes =
         new List<RescueNodeDefinition>();
+
+    /// <summary>Converts a layout position (x right, y down) to a point on the ground.</summary>
+    public Vector3 LayoutToWorld(Vector2 layoutPosition, float height = 0f)
+    {
+        return new Vector3(
+            (layoutPosition.x - layoutOrigin.x) * layoutScale,
+            height,
+            (layoutOrigin.y - layoutPosition.y) * layoutScale
+        );
+    }
+}
+
+[Serializable]
+public class BranchReport
+{
+    public string branchName;
+
+    [Tooltip("Survivor count the public report claims for this branch.")]
+    [Min(0)]
+    public int reportedSurvivors;
+
+    [Tooltip("Second line of the sign, e.g. \"Storage +3 · access estimate 3–4\".")]
+    public string note;
+
+    [Tooltip("Left edge of the sign, in layout units.")]
+    public Vector2 signLayoutPosition;
+}
+
+[Serializable]
+public class IntelligenceReport
+{
+    [Tooltip("The report arrives at the start of the day after this one.")]
+    [Min(1)]
+    public int afterDay = 2;
+
+    public string nodeId;
+
+    [Min(0)]
+    public int newDifficulty;
+
+    [TextArea(2, 4)]
+    public string message;
 }
 
 [Serializable]
@@ -50,4 +113,13 @@ public class RescueNodeDefinition
     [Tooltip("Storage camp reward: logistics points granted the day after a team first passes this node.")]
     [Min(0)]
     public int logisticsReward;
+
+    [Header("Layout (used when the map is built from layout)")]
+    public Vector2 layoutPosition;
+
+    [Tooltip("Draw the trail from the parent as a dashed, uncertain continuation.")]
+    public bool uncertainRoute;
+
+    [Tooltip("Where the storage camp marker stands, if this node has a logistics reward.")]
+    public Vector2 storageLayoutPosition;
 }

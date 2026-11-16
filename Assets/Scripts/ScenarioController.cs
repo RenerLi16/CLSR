@@ -10,6 +10,10 @@ public class ScenarioController : MonoBehaviour
     private readonly Dictionary<string, RescueNode> sceneNodes =
         new Dictionary<string, RescueNode>();
 
+    // The scenario asset as authored. During play the controller works on a
+    // copy, so intelligence reports never overwrite the asset itself.
+    private RescueScenarioData sourceScenario;
+
     public RescueScenarioData CurrentScenario
     {
         get { return scenario; }
@@ -36,6 +40,23 @@ public class ScenarioController : MonoBehaviour
         {
             Debug.LogError("Scenario validation failed. Gameplay initialization stopped.");
             return;
+        }
+
+        sourceScenario = scenario;
+        scenario = Instantiate(sourceScenario);
+        scenario.name = sourceScenario.name + " (runtime)";
+
+        if (scenario.buildMapFromLayout)
+        {
+            ScenarioMapBuilder builder = GetComponent<ScenarioMapBuilder>();
+
+            if (builder == null)
+            {
+                Debug.LogError("This scenario builds its map from layout, but no ScenarioMapBuilder is attached.");
+                return;
+            }
+
+            builder.Build(scenario);
         }
 
         sceneNodes.Clear();
@@ -240,10 +261,66 @@ public class ScenarioController : MonoBehaviour
 
     public void ResetSceneNodes()
     {
+        // Undo any intelligence-report changes.
+        foreach (RescueNodeDefinition definition in scenario.nodes)
+        {
+            RescueNodeDefinition original =
+                sourceScenario.nodes.Find(node => node.nodeId == definition.nodeId);
+
+            if (original != null)
+            {
+                definition.difficulty = original.difficulty;
+            }
+
+            if (sceneNodes.TryGetValue(definition.nodeId, out RescueNode sceneNode))
+            {
+                sceneNode.difficulty = definition.difficulty;
+            }
+        }
+
         foreach (RescueNode sceneNode in sceneNodes.Values)
         {
             sceneNode.ResetDiscovery();
         }
+    }
+
+    /// <summary>
+    /// Applies the reports scheduled after <paramref name="finishedDay"/> and
+    /// returns their messages for the day summary.
+    /// </summary>
+    public List<string> ApplyIntelligenceReports(int finishedDay)
+    {
+        List<string> messages = new List<string>();
+
+        foreach (IntelligenceReport report in scenario.intelligenceReports)
+        {
+            if (report.afterDay != finishedDay)
+            {
+                continue;
+            }
+
+            RescueNodeDefinition definition = GetDefinition(report.nodeId);
+
+            if (definition == null)
+            {
+                Debug.LogWarning("Intelligence report names unknown node " + report.nodeId + ".");
+                continue;
+            }
+
+            definition.difficulty = report.newDifficulty;
+
+            if (sceneNodes.TryGetValue(report.nodeId, out RescueNode sceneNode))
+            {
+                sceneNode.difficulty = report.newDifficulty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(report.message))
+            {
+                messages.Add(report.message);
+            }
+        }
+
+        return messages;
     }
 
     private bool ValidateScenario()

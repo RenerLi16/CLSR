@@ -1,0 +1,199 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b60f5297ee014700a97b7e762a476a5, type: 3}
+  m_Name: S3_CedarValley
+  m_EditorClassIdentifier: Assembly-CSharp::RescueScenarioData
+  scenarioName: Cedar Valley
+  totalDays: 3
+  totalLogisticsPoints: 9
+  dailyDeploymentCap: 4
+  maxExpeditionsPerDay: 2
+  briefing: Storage camps pay out the day after a team passes them. A Day-2 report may change one high route before Day 3.
+  branches:
+  - branchName: North Ridge
+    reportedSurvivors: 1
+    note: "Storage +3 \xb7 access estimate 3\u20134"
+    signLayoutPosition: {x: 36, y: 8}
+  - branchName: West Woods
+    reportedSurvivors: 3
+    note: "Storage +1 \xb7 access estimate 2\u20133"
+    signLayoutPosition: {x: 263, y: 8}
+  - branchName: River Road
+    reportedSurvivors: 5
+    note: "No storage \xb7 access estimate 2\u20134"
+    signLayoutPosition: {x: 590, y: 8}
+  - branchName: Cliff Pass
+    reportedSurvivors: 3
+    note: "No storage \xb7 access estimate 1\u20133"
+    signLayoutPosition: {x: 810, y: 8}
+  intelligenceReports:
+  - afterDay: 2
+    nodeId: C3
+    newDifficulty: 2
+    message: Rockfall on the upper Cliff Pass route has been cleared. Reaching C3 now takes one fewer logistics point.
+  buildMapFromLayout: 1
+  layoutScale: 0.03
+  layoutOrigin: {x: 500, y: 555}
+  nodes:
+  - nodeId: Camp
+    parentNodeId: 
+    depth: 0
+    difficulty: 0
+    survivorCount: 0
+    logisticsReward: 0
+    layoutPosition: {x: 500, y: 555}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: N1
+    parentNodeId: Camp
+    depth: 1
+    difficulty: 1
+    survivorCount: 0
+    logisticsReward: 0
+    layoutPosition: {x: 215, y: 470}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: N2
+    parentNodeId: N1
+    depth: 2
+    difficulty: 3
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 130, y: 365}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: N3
+    parentNodeId: N2
+    depth: 3
+    difficulty: 4
+    survivorCount: 0
+    logisticsReward: 3
+    layoutPosition: {x: 78, y: 250}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 29, y: 250}
+  - nodeId: N4
+    parentNodeId: N2
+    depth: 3
+    difficulty: 4
+    survivorCount: 0
+    logisticsReward: 0
+    layoutPosition: {x: 175, y: 235}
+    uncertainRoute: 1
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: W1
+    parentNodeId: Camp
+    depth: 1
+    difficulty: 1
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 390, y: 455}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: W2
+    parentNodeId: W1
+    depth: 2
+    difficulty: 2
+    survivorCount: 1
+    logisticsReward: 1
+    layoutPosition: {x: 330, y: 335}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 281, y: 337}
+  - nodeId: W3
+    parentNodeId: W2
+    depth: 3
+    difficulty: 3
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 300, y: 205}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: W4
+    parentNodeId: W2
+    depth: 3
+    difficulty: 3
+    survivorCount: 0
+    logisticsReward: 0
+    layoutPosition: {x: 420, y: 220}
+    uncertainRoute: 1
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: R1
+    parentNodeId: Camp
+    depth: 1
+    difficulty: 1
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 610, y: 455}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: R2
+    parentNodeId: R1
+    depth: 2
+    difficulty: 2
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 680, y: 340}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: R3
+    parentNodeId: R2
+    depth: 3
+    difficulty: 3
+    survivorCount: 0
+    logisticsReward: 0
+    layoutPosition: {x: 585, y: 225}
+    uncertainRoute: 1
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: R4
+    parentNodeId: R2
+    depth: 3
+    difficulty: 3
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 760, y: 235}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: R5
+    parentNodeId: R4
+    depth: 4
+    difficulty: 4
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 865, y: 145}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: C1
+    parentNodeId: Camp
+    depth: 1
+    difficulty: 1
+    survivorCount: 0
+    logisticsReward: 0
+    layoutPosition: {x: 785, y: 465}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: C2
+    parentNodeId: C1
+    depth: 2
+    difficulty: 2
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 865, y: 350}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}
+  - nodeId: C3
+    parentNodeId: C2
+    depth: 3
+    difficulty: 3
+    survivorCount: 1
+    logisticsReward: 0
+    layoutPosition: {x: 925, y: 245}
+    uncertainRoute: 0
+    storageLayoutPosition: {x: 0, y: 0}

@@ -101,7 +101,22 @@ public class GraphCameraFraming : MonoBehaviour
             }
         }
 
-        // Screen area to the right of the planning panel, in 0..1 viewport units.
+        foreach (WorldLabel worldLabel in WorldLabel.Active)
+        {
+            if (worldLabel == null || worldLabel.Rect == null)
+            {
+                continue;
+            }
+
+            worldLabel.Rect.GetWorldCorners(corners);
+
+            foreach (Vector3 corner in corners)
+            {
+                Include(corner);
+            }
+        }
+
+                // Screen area to the right of the planning panel, in 0..1 viewport units.
         float left = margin;
 
         if (
