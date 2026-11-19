@@ -128,6 +128,10 @@ public class GraphCameraFraming : MonoBehaviour
             planningUI.PanelRect.GetWorldCorners(corners);
             left = corners[2].x / Screen.width + margin;
         }
+        else if (ReviewStudyFlow.IsActive)
+        {
+            left = ReviewStudyFlow.PanelWidth / Screen.width + margin;
+        }
 
         float right = 1f - margin;
         float bottom = margin;

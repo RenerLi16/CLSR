@@ -48,9 +48,13 @@ public class RescueNodeLabel : MonoBehaviour
         bool difficultyKnown = scenarioController.IsDifficultyKnown(nodeId);
         RescueNodeDefinition definition = scenarioController.GetDefinition(nodeId);
 
-        labelText.text =
-            Line("HERE", survivorsKnown, scenarioController.CountRemainingHere(nodeId)) + "\n" +
-            Line("BEYOND", survivorsKnown, scenarioController.CountRemainingBeyond(nodeId)) + "\n" +
+        bool frontierCount = scenarioController.TryGetDiscoveredBranchCount(nodeId, out int branchCount)
+            && !survivorsKnown;
+        string hereAndBeyond = frontierCount
+            ? Line("BRANCH", true, branchCount) + "\n" + Line("HERE", false, 0)
+            : Line("HERE", survivorsKnown, scenarioController.CountRemainingHere(nodeId)) + "\n" +
+            Line("BEYOND", survivorsKnown, scenarioController.CountRemainingBeyond(nodeId));
+        labelText.text = hereAndBeyond + "\n" +
             Line("DIFF", difficultyKnown, definition != null ? definition.difficulty : 0);
 
         Camera activeCamera = Camera.main;

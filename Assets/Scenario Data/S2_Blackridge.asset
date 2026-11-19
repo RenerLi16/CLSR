@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RescueScenarioData
   scenarioName: Blackridge Storm Rescue
   totalDays: 3
-  totalLogisticsPoints: 12
+  totalLogisticsPoints: 9
   dailyDeploymentCap: 4
-  maxExpeditionsPerDay: 4
+  maxExpeditionsPerDay: 2
   nodes:
   - nodeId: Camp
     parentNodeId: 
@@ -37,12 +37,12 @@ MonoBehaviour:
     parentNodeId: Fallen Timber Trail
     depth: 3
     difficulty: 3
-    survivorCount: 3
+    survivorCount: 1
   - nodeId: Creek Shelter
     parentNodeId: West Fork
     depth: 2
     difficulty: 2
-    survivorCount: 2
+    survivorCount: 1
   - nodeId: North Pass
     parentNodeId: Camp
     depth: 1
@@ -57,12 +57,12 @@ MonoBehaviour:
     parentNodeId: Rockslide Gate
     depth: 3
     difficulty: 3
-    survivorCount: 2
+    survivorCount: 1
   - nodeId: Summit Cabin
     parentNodeId: Upper Ridge
     depth: 4
     difficulty: 4
-    survivorCount: 5
+    survivorCount: 1
   - nodeId: Miner's Hut
     parentNodeId: Rockslide Gate
     depth: 3
@@ -82,9 +82,9 @@ MonoBehaviour:
     parentNodeId: Flooded Causeway
     depth: 3
     difficulty: 2
-    survivorCount: 3
+    survivorCount: 1
   - nodeId: Weather Station
     parentNodeId: Flooded Causeway
     depth: 3
     difficulty: 3
-    survivorCount: 3
+    survivorCount: 1

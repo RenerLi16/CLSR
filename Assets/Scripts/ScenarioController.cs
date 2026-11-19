@@ -140,8 +140,9 @@ public class ScenarioController : MonoBehaviour
     //
     // DIFF  is revealed once any expedition reaches the node, whether it got
     //       past or was blocked there. A blocked team reveals nothing else.
-    // HERE and BEYOND are revealed only once a team has passed the node, so
-    //       deeper information unlocks step by step along a branch.
+    // HERE and BEYOND are revealed only once a team has passed the node.
+    // Passing a junction also reveals a separate aggregate for each immediate
+    // child branch; it does not reveal an unreached child's HERE or DIFF.
 
     public bool IsDifficultyKnown(string nodeId)
     {
@@ -155,6 +156,18 @@ public class ScenarioController : MonoBehaviour
         return
             sceneNodes.TryGetValue(nodeId, out RescueNode sceneNode) &&
             sceneNode.reached;
+    }
+
+    public bool TryGetDiscoveredBranchCount(string nodeId, out int remaining)
+    {
+        remaining = 0;
+        RescueNodeDefinition definition = GetDefinition(nodeId);
+        if (definition == null || string.IsNullOrEmpty(definition.parentNodeId) ||
+            !AreSurvivorCountsKnown(definition.parentNodeId))
+            return false;
+
+        remaining = CountRemainingBranchSurvivors(nodeId);
+        return true;
     }
 
     /// <summary>Survivors still waiting at this node itself.</summary>
