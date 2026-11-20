@@ -3,23 +3,6 @@ using UnityEngine.UI;
 
 public class RescuePlanningUI : MonoBehaviour
 {
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void EnsureInterfaceExists()
-    {
-        if (FindAnyObjectByType<RescuePlanningUI>() != null)
-        {
-            return;
-        }
-
-        RescueGameController controller =
-            FindAnyObjectByType<RescueGameController>();
-
-        if (controller != null)
-        {
-            controller.gameObject.AddComponent<RescuePlanningUI>();
-        }
-    }
-
     [Header("Game")]
     [SerializeField]
     private RescueGameController gameController;

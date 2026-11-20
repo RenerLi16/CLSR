@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: S1_Mountain
   m_EditorClassIdentifier: Assembly-CSharp::RescueScenarioData
   scenarioName: Mountain Search
-  totalDays: 3
-  totalLogisticsPoints: 12
-  dailyDeploymentCap: 4
-  maxExpeditionsPerDay: 4
+  totalDays: 1
+  totalLogisticsPoints: 3
+  dailyDeploymentCap: 3
+  maxExpeditionsPerDay: 2
   nodes:
   - nodeId: Camp
     parentNodeId: 
@@ -37,7 +37,7 @@ MonoBehaviour:
     parentNodeId: A
     depth: 2
     difficulty: 2
-    survivorCount: 2
+    survivorCount: 1
   - nodeId: D
     parentNodeId: A
     depth: 2
@@ -52,9 +52,9 @@ MonoBehaviour:
     parentNodeId: B
     depth: 2
     difficulty: 1
-    survivorCount: 2
+    survivorCount: 1
   - nodeId: G
     parentNodeId: E
     depth: 3
     difficulty: 3
-    survivorCount: 3
+    survivorCount: 1

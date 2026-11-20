@@ -45,7 +45,7 @@ public class RescueNode : MonoBehaviour
     {
         mouseOver = true;
 
-        if (!selected)
+        if (!selected && !ReviewStudyFlow.IsActive)
         {
             SetColor(hoverColor);
         }
@@ -59,6 +59,12 @@ public class RescueNode : MonoBehaviour
 
     private void OnMouseDown()
     {
+        // The review UI selects on release so a drag can start over a node.
+        if (ReviewStudyFlow.IsActive)
+        {
+            return;
+        }
+
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             return;
@@ -93,7 +99,7 @@ public class RescueNode : MonoBehaviour
         }
         else
         {
-            SetColor(mouseOver ? hoverColor : normalColor);
+            SetColor(mouseOver && !ReviewStudyFlow.IsActive ? hoverColor : normalColor);
         }
     }
 
@@ -105,7 +111,7 @@ public class RescueNode : MonoBehaviour
 
         if (!selected)
         {
-            SetColor(mouseOver ? hoverColor : normalColor);
+            SetColor(mouseOver && !ReviewStudyFlow.IsActive ? hoverColor : normalColor);
         }
     }
 

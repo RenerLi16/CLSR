@@ -228,6 +228,37 @@ public class RescueGameController : MonoBehaviour
         PrintCurrentState();
     }
 
+    // The study screens draft plans without touching the simulation. Only the
+    // final team plan reaches the engine, after all pre-outcome forms are closed.
+    public bool TrySetPlan(IReadOnlyList<ExpeditionAssignment> plan)
+    {
+        if (gameOver || plan.Count > MaxExpeditionsPerDay)
+            return false;
+
+        int spent = 0;
+        var seen = new HashSet<string>();
+        foreach (var trip in plan)
+        {
+            if (trip.assignedGroups <= 0 || trip.assignedGroups > DailyDeploymentCap ||
+                !seen.Add(trip.targetNodeId) ||
+                scenarioController.GetPathFromCamp(trip.targetNodeId).Count == 0)
+                return false;
+            spent += trip.assignedGroups;
+        }
+
+        if (spent > DailyDeploymentCap || spent > logisticsPool)
+            return false;
+
+        plannedAssignments.Clear();
+        foreach (var trip in plan)
+            plannedAssignments.Add(new ExpeditionAssignment
+            {
+                targetNodeId = trip.targetNodeId,
+                assignedGroups = trip.assignedGroups
+            });
+        return true;
+    }
+
     /// <summary>
     /// Launches today's expeditions (an empty plan simply ends the day),
     /// spends the deployed points and advances to the next day.

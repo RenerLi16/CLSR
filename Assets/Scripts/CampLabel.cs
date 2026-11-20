@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class CampLabel : MonoBehaviour
@@ -6,8 +7,14 @@ public class CampLabel : MonoBehaviour
     private GameObject labelObject;
     private RectTransform labelTransform;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void EnsureCampLabelExists()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void AttachOnSceneLoad()
+    {
+        SceneManager.sceneLoaded -= EnsureCampLabelExists;
+        SceneManager.sceneLoaded += EnsureCampLabelExists;
+    }
+
+    private static void EnsureCampLabelExists(Scene scene, LoadSceneMode mode)
     {
         GameObject camp = GameObject.Find("N00_Camp");
 
@@ -32,7 +39,8 @@ public class CampLabel : MonoBehaviour
         }
 
         labelTransform.position =
-            transform.position - activeCamera.transform.up * 0.72f;
+            transform.position - activeCamera.transform.up * 0.82f -
+            activeCamera.transform.forward * 1.25f;
         labelTransform.rotation = activeCamera.transform.rotation;
     }
 
@@ -56,7 +64,7 @@ public class CampLabel : MonoBehaviour
 
         labelTransform = labelObject.GetComponent<RectTransform>();
         labelTransform.localScale = Vector3.one * 0.0083f;
-        labelTransform.sizeDelta = new Vector2(220f, 66f);
+        labelTransform.sizeDelta = new Vector2(242f, 80f);
 
         Canvas canvas = labelObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
@@ -96,7 +104,7 @@ public class CampLabel : MonoBehaviour
 
         Text text = textObject.GetComponent<Text>();
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.fontSize = 42;
+        text.fontSize = 52;
         text.color = Color.white;
         text.alignment = TextAnchor.MiddleCenter;
         text.raycastTarget = false;
