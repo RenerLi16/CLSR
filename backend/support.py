@@ -101,6 +101,30 @@ def validate_request(request):
         validate_plan(judgment["plan"], parents, budget, max_expeditions)
 
 
+def describe_plan(plan):
+    if not plan:
+        return "Launch no expeditions"
+    return "Send " + ", ".join(f"{leg['points']} LP to {leg['target']}" for leg in plan)
+
+
+def validate_model_output(output, request):
+    fields(output, "message", "recommended_plan")
+    message = output["message"]
+    require(type(message) is str and 25 <= len(message) <= 360
+            and message == message.strip() and message.isprintable()
+            and "<" not in message and ">" not in message)
+    plan = output["recommended_plan"]
+    context = request["context"]
+    if request["condition"] == DIRECT:
+        validate_plan(plan, {site["id"] for site in context["sites"]},
+                      min(context["points_available"], context["daily_cap"]),
+                      context["max_expeditions"])
+        # Display the checked plan rather than asking the model to repeat it in prose.
+        return f"{describe_plan(plan)}. {message}", plan
+    require(request["condition"] == DISSENT and plan is None and message.endswith("?"))
+    return message, None
+
+
 def build_mock_response(request):
     validate_request(request)
     condition, context = request["condition"], request["context"]

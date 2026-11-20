@@ -1,10 +1,11 @@
-"""Loopback-only mock service. No external requests, local records, or game connection."""
+"""Loopback-only development service. Mock by default; no local records."""
 
 import argparse
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from .support import build_mock_response
+from .openai_provider import OpenAIProvider, ProviderFailure
+from .support import NO_AI, build_mock_response
 
 
 ROUTE = "/v1/support"
@@ -46,7 +47,15 @@ class Handler(BaseHTTPRequestHandler):
             body = self.rfile.read(size)
             if len(body) != size:
                 return self.reply(400, {"error": "incomplete_body"})
-            result = build_mock_response(json.loads(body.decode("utf-8")))
+            request = json.loads(body.decode("utf-8"))
+            provider = self.server.support_provider
+            if provider is None or (type(request) is dict and request.get("condition") == NO_AI):
+                result = build_mock_response(request)
+            else:
+                result = provider.generate(request)
+        except ProviderFailure as exc:
+            status = 504 if str(exc) == "provider_timeout" else 502
+            return self.reply(status, {"error": str(exc)})
         except (ValueError, RecursionError):
             return self.reply(400, {"error": "invalid_support_request"})
         except TimeoutError:
@@ -54,15 +63,23 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(200, result)
 
 
-def make_server(port):
-    return HTTPServer(("127.0.0.1", port), Handler)
+def make_server(port, provider=None):
+    server = HTTPServer(("127.0.0.1", port), Handler)
+    server.support_provider = provider
+    return server
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8787)
-    with make_server(parser.parse_args().port) as server:
-        print(f"CLSR mock listening at http://127.0.0.1:{server.server_port}{ROUTE}", flush=True)
+    parser.add_argument("--provider", choices=("mock", "openai"), default="mock")
+    args = parser.parse_args()
+    try:
+        provider = OpenAIProvider.from_environment() if args.provider == "openai" else None
+    except ValueError as exc:
+        parser.error(str(exc))
+    with make_server(args.port, provider) as server:
+        print(f"CLSR {args.provider} listening at http://127.0.0.1:{server.server_port}{ROUTE}", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:
