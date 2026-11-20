@@ -85,7 +85,7 @@ public sealed partial class ReviewStudyFlow
     {
         Label(question);
         GUI.SetNextControlName(key);
-        answers[key] = GUILayout.TextArea(Value(key), limit, textAreaStyle, GUILayout.MinHeight(78));
+        answers[key] = GUILayout.TextArea(Value(key), limit, textAreaStyle, GUILayout.MinHeight(150));
         GUILayout.Space(6);
     }
 

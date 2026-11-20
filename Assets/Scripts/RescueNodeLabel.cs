@@ -21,6 +21,7 @@ public class RescueNodeLabel : MonoBehaviour
     private ScenarioController scenarioController;
     private GameObject labelObject;
     private RectTransform labelTransform;
+    private Canvas labelCanvas;
     private Text labelText;
 
     public RectTransform LabelRect => labelTransform;
@@ -43,6 +44,18 @@ public class RescueNodeLabel : MonoBehaviour
             return;
         }
 
+        Camera activeCamera = Camera.main;
+        if (activeCamera != null)
+        {
+            labelTransform.position = transform.position + LabelOffset;
+            labelTransform.rotation = activeCamera.transform.rotation;
+        }
+
+        // Keep the layout bounds in place even when hidden, so hovering does not reframe the map.
+        labelCanvas.enabled = !ReviewStudyFlow.IsActive || ReviewStudyFlow.HoveredNode == rescueNode;
+        if (!labelCanvas.enabled)
+            return;
+
         string nodeId = rescueNode.nodeId;
         bool survivorsKnown = scenarioController.AreSurvivorCountsKnown(nodeId);
         bool difficultyKnown = scenarioController.IsDifficultyKnown(nodeId);
@@ -56,15 +69,6 @@ public class RescueNodeLabel : MonoBehaviour
             Line("BEYOND", survivorsKnown, scenarioController.CountRemainingBeyond(nodeId));
         labelText.text = hereAndBeyond + "\n" +
             Line("DIFF", difficultyKnown, definition != null ? definition.difficulty : 0);
-
-        Camera activeCamera = Camera.main;
-
-        if (activeCamera != null)
-        {
-            labelTransform.position =
-                transform.position + LabelOffset;
-            labelTransform.rotation = activeCamera.transform.rotation;
-        }
     }
 
     private static string Line(string name, bool known, int value)
@@ -109,10 +113,11 @@ public class RescueNodeLabel : MonoBehaviour
         labelTransform.localScale = Vector3.one * 0.0083f;
         labelTransform.sizeDelta = new Vector2(360f, 225f);
 
-        Canvas canvas = labelObject.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.WorldSpace;
-        canvas.overrideSorting = true;
-        canvas.sortingOrder = 20;
+        labelCanvas = labelObject.GetComponent<Canvas>();
+        labelCanvas.renderMode = RenderMode.WorldSpace;
+        labelCanvas.overrideSorting = true;
+        labelCanvas.sortingOrder = 20;
+        labelCanvas.enabled = false;
 
         GameObject backgroundObject = new GameObject(
             "Background",

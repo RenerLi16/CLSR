@@ -13,6 +13,12 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
     private const string PracticeScene = "PrototypeMap";
     private const float MapDragThreshold = 6f;
+    private const float PanelButtonHeight = 68f;
+    private const float ZoomButtonSize = 64f;
+    private const float ResetButtonWidth = 80f;
+    private const float ZoomButtonGap = 6f;
+    private const float ZoomBarMargin = 14f;
+    private const float ZoomBarWidth = 2f * ZoomButtonSize + ResetButtonWidth + 2f * ZoomButtonGap;
     private static readonly string[] Conditions =
         { "Random", "No AI", "Direct Recommendation", "Constructive Dissent" };
     private static readonly string[] MapScenes = { "CedarValley", "BlackridgeStorm" };
@@ -29,9 +35,11 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     }
 
     public static bool IsActive => active != null;
-    public static float PanelWidth => Mathf.Min(550, Screen.width * .47f);
+    public static float PanelWidth => Mathf.Min(880f, Screen.width * .52f);
+    public static RescueNode HoveredNode => active != null ? active.hoveredNode : null;
     private static Rect ZoomControlsRect =>
-        new Rect(Screen.width - 170f, Screen.height - 56f, 156f, 42f);
+        new Rect(Screen.width - ZoomBarWidth - ZoomBarMargin,
+            Screen.height - ZoomButtonSize - ZoomBarMargin, ZoomBarWidth, ZoomButtonSize);
 
     private bool CanSelectMapNode => phase == Phase.Observe || IsPlanningPhase ||
         phase == Phase.Result || phase == Phase.Intervention;
@@ -46,7 +54,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     private RescueGameController game;
     private ScenarioController scenario;
     private GraphCameraFraming mapCamera;
-    private RescueNode pressedNode;
+    private RescueNode pressedNode, hoveredNode;
     private Vector2 mapPressPosition, lastDragPosition;
     private bool mapPointerHeld, mapDragging;
     private Phase phase, form;
@@ -88,6 +96,14 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         scenario = GetComponent<ScenarioController>();
         phase = session == null ? Phase.Setup :
             session.ScenarioIndex < 0 ? Phase.Practice : Phase.Observe;
+    }
+
+    private void Update()
+    {
+        Vector2 pointer = Input.mousePosition;
+        pointer.y = Screen.height - pointer.y;
+        hoveredNode = Application.isFocused && !mapDragging && IsPointerOverMap(pointer)
+            ? GetNodeAt(pointer) : null;
     }
 
     private void HandleMapPointer()
@@ -139,7 +155,10 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     private void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus)
+        {
+            hoveredNode = null;
             ClearMapGesture();
+        }
     }
 
     private void ClearMapGesture()
@@ -214,15 +233,16 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
         bool wasEnabled = GUI.enabled;
         GUI.enabled = wasEnabled && framing.CanZoomOut;
-        if (GUI.Button(new Rect(bar.x, bar.y, 44f, bar.height), "−", buttonStyle))
+        if (GUI.Button(new Rect(bar.x, bar.y, ZoomButtonSize, bar.height), "−", buttonStyle))
             framing.ZoomOut();
 
         GUI.enabled = wasEnabled && !framing.IsDefaultView;
-        if (GUI.Button(new Rect(bar.x + 48f, bar.y, 60f, bar.height), "1:1", buttonStyle))
+        if (GUI.Button(new Rect(bar.x + ZoomButtonSize + ZoomButtonGap, bar.y, ResetButtonWidth, bar.height),
+            "1:1", buttonStyle))
             framing.ResetView();
 
         GUI.enabled = wasEnabled && framing.CanZoomIn;
-        if (GUI.Button(new Rect(bar.x + 112f, bar.y, 44f, bar.height), "+", buttonStyle))
+        if (GUI.Button(new Rect(bar.xMax - ZoomButtonSize, bar.y, ZoomButtonSize, bar.height), "+", buttonStyle))
             framing.ZoomIn();
         GUI.enabled = wasEnabled;
     }
@@ -233,19 +253,21 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
             return;
 
         labelStyle = new GUIStyle(GUI.skin.label) {
-            fontSize = 20, wordWrap = true, normal = { textColor = Color.black } };
-        headingStyle = new GUIStyle(labelStyle) { fontSize = 29, fontStyle = FontStyle.Bold };
-        statusStyle = new GUIStyle(labelStyle) { fontSize = 22, fontStyle = FontStyle.Bold };
-        noticeStyle = new GUIStyle(labelStyle) { fontSize = 16 };
-        buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 19, wordWrap = true, fixedHeight = 0 };
+            fontSize = 38, wordWrap = true, normal = { textColor = Color.black } };
+        headingStyle = new GUIStyle(labelStyle) { fontSize = 50, fontStyle = FontStyle.Bold };
+        statusStyle = new GUIStyle(labelStyle) { fontSize = 42, fontStyle = FontStyle.Bold };
+        noticeStyle = new GUIStyle(labelStyle) { fontSize = 28 };
+        buttonStyle = new GUIStyle(GUI.skin.button) {
+            fontSize = 36, wordWrap = true, fixedHeight = 0, padding = new RectOffset(12, 12, 9, 9)
+        };
         toggleStyle = new GUIStyle(GUI.skin.toggle) {
-            fontSize = 19, wordWrap = true, fixedHeight = 0, normal = { textColor = Color.black },
+            fontSize = 36, wordWrap = true, fixedHeight = 0, normal = { textColor = Color.black },
             onNormal = { textColor = Color.black }, hover = { textColor = Color.black },
             onHover = { textColor = Color.black }, active = { textColor = Color.black },
             onActive = { textColor = Color.black }, focused = { textColor = Color.black },
             onFocused = { textColor = Color.black }
         };
-        textAreaStyle = new GUIStyle(GUI.skin.textArea) { fontSize = 20, wordWrap = true };
+        textAreaStyle = new GUIStyle(GUI.skin.textArea) { fontSize = 38, wordWrap = true };
     }
 
     private void DrawPhase()
@@ -257,9 +279,9 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 Label("Three players work together to rescue as many people as possible. This walkthrough uses one practice dispatch and two draft scenarios. Game days are rounds, not separate visits.");
                 Label("Select a preview condition, or use Random. It stays the same for both scenarios.");
                 chosenCondition = GUILayout.SelectionGrid(chosenCondition, Conditions, 1, buttonStyle,
-                    GUILayout.MinHeight(40 * Conditions.Length));
+                    GUILayout.MinHeight((PanelButtonHeight + 4f) * Conditions.Length));
                 skipTimers = GUILayout.Toggle(skipTimers, "Skip countdowns for reviewer walkthrough", toggleStyle,
-                    GUILayout.MinHeight(38));
+                    GUILayout.MinHeight(PanelButtonHeight));
                 if (Button("Start practice"))
                 {
                     session = new Session {
@@ -590,5 +612,5 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     private void Heading(string text) => GUILayout.Label(text, headingStyle);
     private void Label(string text) => GUILayout.Label(text, labelStyle);
     private void Status(string text) => GUILayout.Label(text, statusStyle);
-    private bool Button(string text) => GUILayout.Button(text, buttonStyle, GUILayout.MinHeight(38));
+    private bool Button(string text) => GUILayout.Button(text, buttonStyle, GUILayout.MinHeight(PanelButtonHeight));
 }

@@ -68,7 +68,6 @@ public class GraphCameraFraming : MonoBehaviour
     private RescuePlanningUI planningUI;
     private RescueNodeLabel[] labels;
     private readonly List<Renderer> graphRenderers = new List<Renderer>();
-    private readonly List<Rect> placedLabels = new List<Rect>();
     private readonly Vector3[] corners = new Vector3[4];
 
     private float minX, maxX, minY, maxY;
@@ -83,10 +82,6 @@ public class GraphCameraFraming : MonoBehaviour
     {
         planningUI = FindAnyObjectByType<RescuePlanningUI>();
         labels = FindObjectsByType<RescueNodeLabel>(FindObjectsSortMode.None);
-        Vector3 up = transform.up;
-        System.Array.Sort(labels, (a, b) =>
-            Vector3.Dot(a.transform.position, up).CompareTo(Vector3.Dot(b.transform.position, up)));
-
         HashSet<Transform> graphRoots = new HashSet<Transform>();
 
         foreach (RescueNode node in FindObjectsByType<RescueNode>(FindObjectsSortMode.None))
@@ -129,7 +124,6 @@ public class GraphCameraFraming : MonoBehaviour
             }
         }
 
-        placedLabels.Clear();
         foreach (RescueNodeLabel label in labels)
         {
             if (label == null || label.LabelRect == null)
@@ -137,7 +131,10 @@ public class GraphCameraFraming : MonoBehaviour
                 continue;
             }
 
-            FitNodeLabel(label.LabelRect);
+            // Reserve each hover card's space so that showing one never shifts the fitted view.
+            label.LabelRect.GetWorldCorners(corners);
+            foreach (Vector3 corner in corners)
+                Include(corner);
         }
 
         foreach (WorldLabel worldLabel in WorldLabel.Active)
@@ -213,37 +210,5 @@ public class GraphCameraFraming : MonoBehaviour
         maxX = Mathf.Max(maxX, p.x);
         minY = Mathf.Min(minY, p.y);
         maxY = Mathf.Max(maxY, p.y);
-    }
-
-    private void FitNodeLabel(RectTransform label)
-    {
-        label.GetWorldCorners(corners);
-        Vector3 lower = transform.InverseTransformPoint(corners[0]);
-        Vector3 upper = transform.InverseTransformPoint(corners[2]);
-        Rect box = Rect.MinMaxRect(lower.x, lower.y, upper.x, upper.y);
-
-        // Lift only cards whose text area would overlap a lower card.
-        const float inset = 0.10f;
-        const float gap = 0.12f;
-        for (int pass = 0; pass < placedLabels.Count; pass++)
-        {
-            float nextY = box.yMin;
-            foreach (Rect placed in placedLabels)
-            {
-                if (box.xMin + inset < placed.xMax - inset && box.xMax - inset > placed.xMin + inset &&
-                    box.yMin < placed.yMax && box.yMax > placed.yMin)
-                    nextY = Mathf.Max(nextY, placed.yMax + gap);
-            }
-            if (nextY <= box.yMin + 0.001f)
-                break;
-            box.y = nextY;
-        }
-        label.position += transform.up * (box.yMin - lower.y);
-        placedLabels.Add(box);
-
-        minX = Mathf.Min(minX, box.xMin);
-        maxX = Mathf.Max(maxX, box.xMax);
-        minY = Mathf.Min(minY, box.yMin);
-        maxY = Mathf.Max(maxY, box.yMax);
     }
 }
