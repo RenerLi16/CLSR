@@ -18,12 +18,14 @@ public class BranchSign : MonoBehaviour
 
     private void Awake()
     {
+        Camera activeCamera = Camera.main;
+        Vector3 up = activeCamera != null ? activeCamera.transform.up : Vector3.up;
         label = WorldLabel.Create(
             "SignLabel_" + branchName,
-            transform.position,
-            new Vector2(554f, 150f),
+            transform.position + up * 0.8f,
+            new Vector2(625f, 224f),
             new Vector2(0f, 0.5f),
-            36,
+            47,
             TextAnchor.MiddleLeft,
             false
         );
@@ -73,6 +75,6 @@ public class BranchSign : MonoBehaviour
         label.Content =
             "<b>" + branch.branchName.ToUpper() + "</b>\n" +
             report + "\n" +
-            "<color=#A8A8A8>" + branch.note + "</color>";
+            "<color=#C8C8C8>" + (branch.note ?? "").Replace(" · ", "\n") + "</color>";
     }
 }

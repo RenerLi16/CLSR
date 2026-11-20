@@ -12,6 +12,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         ScenarioResult, Complete }
 
     private const string PracticeScene = "PrototypeMap";
+    private const float MapDragThreshold = 6f;
     private static readonly string[] Conditions =
         { "Random", "No AI", "Direct Recommendation", "Constructive Dissent" };
     private static readonly string[] MapScenes = { "CedarValley", "BlackridgeStorm" };
@@ -29,17 +30,31 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
     public static bool IsActive => active != null;
     public static float PanelWidth => Mathf.Min(550, Screen.width * .47f);
-    public static bool CanClickMap => active != null && Input.mousePosition.x > PanelWidth &&
-        (active.phase == Phase.Observe || active.IsPlanningPhase ||
-         active.phase == Phase.Result || active.phase == Phase.Intervention);
+    private static Rect ZoomControlsRect =>
+        new Rect(Screen.width - 170f, Screen.height - 56f, 156f, 42f);
+
+    private bool CanSelectMapNode => phase == Phase.Observe || IsPlanningPhase ||
+        phase == Phase.Result || phase == Phase.Intervention;
+
+    private static bool IsPointerOverMap(Vector2 pointer)
+    {
+        return pointer.x > PanelWidth && pointer.x < Screen.width &&
+            pointer.y >= 0f && pointer.y < Screen.height &&
+            !ZoomControlsRect.Contains(pointer);
+    }
 
     private RescueGameController game;
     private ScenarioController scenario;
+    private GraphCameraFraming mapCamera;
+    private RescueNode pressedNode;
+    private Vector2 mapPressPosition, lastDragPosition;
+    private bool mapPointerHeld, mapDragging;
     private Phase phase, form;
     private int player, chosenCondition;
     private bool skipTimers, showDestinations;
     private Vector2 scroll;
-    private GUIStyle labelStyle, headingStyle;
+    private GUIStyle labelStyle, headingStyle, statusStyle, noticeStyle;
+    private GUIStyle buttonStyle, toggleStyle, textAreaStyle;
     private float phaseEnds;
     private string message, error, openChoice;
     private readonly List<ExpeditionAssignment> draft = new();
@@ -75,14 +90,84 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
             session.ScenarioIndex < 0 ? Phase.Practice : Phase.Observe;
     }
 
+    private void HandleMapPointer()
+    {
+        int control = GUIUtility.GetControlID(FocusType.Passive);
+        Event input = Event.current;
+        Vector2 pointer = input.mousePosition;
+        if (!mapPointerHeld && GUIUtility.hotControl == control)
+            GUIUtility.hotControl = 0;
+
+        switch (input.GetTypeForControl(control))
+        {
+            case EventType.MouseDown when input.button == 0 && GUIUtility.hotControl == 0 &&
+                IsPointerOverMap(pointer):
+                GUIUtility.hotControl = control;
+                mapPointerHeld = true;
+                mapDragging = false;
+                mapPressPosition = lastDragPosition = pointer;
+                pressedNode = CanSelectMapNode ? GetNodeAt(pointer) : null;
+                input.Use();
+                break;
+            case EventType.MouseDrag when GUIUtility.hotControl == control:
+                MoveMapPointer(pointer);
+                input.Use();
+                break;
+            case EventType.MouseUp when input.button == 0 && GUIUtility.hotControl == control:
+                MoveMapPointer(pointer);
+                if (!mapDragging && CanSelectMapNode && pressedNode != null &&
+                    IsPointerOverMap(pointer) && GetNodeAt(pointer) == pressedNode)
+                    NodeSelectionManager.Instance?.SelectNode(pressedNode);
+                GUIUtility.hotControl = 0;
+                ClearMapGesture();
+                input.Use();
+                break;
+        }
+    }
+
+    private void MoveMapPointer(Vector2 pointer)
+    {
+        mapDragging |= (pointer - mapPressPosition).sqrMagnitude >= MapDragThreshold * MapDragThreshold;
+        if (!mapDragging)
+            return;
+
+        Vector2 delta = pointer - lastDragPosition;
+        GetMapCamera()?.PanByScreenDelta(new Vector2(delta.x, -delta.y));
+        lastDragPosition = pointer;
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+            ClearMapGesture();
+    }
+
+    private void ClearMapGesture()
+    {
+        mapPointerHeld = false;
+        mapDragging = false;
+        pressedNode = null;
+    }
+
+    private static RescueNode GetNodeAt(Vector2 pointer)
+    {
+        Camera camera = Camera.main;
+        if (camera == null)
+            return null;
+
+        int layers = camera.eventMask & camera.cullingMask & Physics.DefaultRaycastLayers;
+        Ray ray = camera.ScreenPointToRay(new Vector2(pointer.x, Screen.height - pointer.y));
+        return Physics.Raycast(ray, out RaycastHit hit, camera.farClipPlane - camera.nearClipPlane, layers)
+            ? hit.collider.GetComponentInParent<RescueNode>() : null;
+    }
+
     private void OnGUI()
     {
         if (scenario == null || !scenario.IsReady)
             return;
 
-        labelStyle ??= new GUIStyle(GUI.skin.label) {
-            fontSize = 15, wordWrap = true, normal = { textColor = Color.black } };
-        headingStyle ??= new GUIStyle(labelStyle) { fontSize = 21, fontStyle = FontStyle.Bold };
+        EnsureTextStyles();
+        HandleMapPointer();
 
         Color previous = GUI.color;
         GUI.color = new Color(.72f, .71f, .55f);
@@ -93,14 +178,14 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         scroll = GUILayout.BeginScrollView(scroll);
         GUILayout.BeginVertical(GUILayout.Width(PanelWidth - 38));
         GUILayout.Label("CASCADE LAB / REVIEW BETA", headingStyle);
-        Label("Demonstration only. Sample messages; no live AI. No responses are saved or sent.");
+        GUILayout.Label("Demonstration only. Sample messages; no live AI. No responses are saved or sent.", noticeStyle);
         if (phase != Phase.Setup && phase != Phase.Complete)
         {
             Label(scenario.CurrentScenario.scenarioName + (session.ScenarioIndex < 0
                 ? " / practice" : $" / scenario {session.ScenarioIndex + 1} of 2"));
             if (phase != Phase.Result && phase != Phase.PostOutcome && phase != Phase.Reasoning &&
                 phase != Phase.ScenarioResult && phase != Phase.PracticeResult)
-                Label($"Simulated day {game.CurrentDay}/{game.TotalDays} | Pool: {game.LogisticsRemaining} LP");
+                Status($"Simulated day {game.CurrentDay}/{game.TotalDays} | Pool: {game.LogisticsRemaining} LP");
         }
         GUILayout.Space(8);
         DrawPhase();
@@ -109,7 +194,58 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         GUILayout.EndVertical();
         GUILayout.EndScrollView();
         GUILayout.EndArea();
+        DrawMapZoom();
         GUI.backgroundColor = Color.white;
+    }
+
+    private GraphCameraFraming GetMapCamera()
+    {
+        if (mapCamera == null && Camera.main is Camera camera)
+            mapCamera = camera.GetComponent<GraphCameraFraming>();
+        return mapCamera;
+    }
+
+    private void DrawMapZoom()
+    {
+        GraphCameraFraming framing = GetMapCamera();
+        Rect bar = ZoomControlsRect;
+        if (framing == null || bar.xMin <= PanelWidth)
+            return;
+
+        bool wasEnabled = GUI.enabled;
+        GUI.enabled = wasEnabled && framing.CanZoomOut;
+        if (GUI.Button(new Rect(bar.x, bar.y, 44f, bar.height), "−", buttonStyle))
+            framing.ZoomOut();
+
+        GUI.enabled = wasEnabled && !framing.IsDefaultView;
+        if (GUI.Button(new Rect(bar.x + 48f, bar.y, 60f, bar.height), "1:1", buttonStyle))
+            framing.ResetView();
+
+        GUI.enabled = wasEnabled && framing.CanZoomIn;
+        if (GUI.Button(new Rect(bar.x + 112f, bar.y, 44f, bar.height), "+", buttonStyle))
+            framing.ZoomIn();
+        GUI.enabled = wasEnabled;
+    }
+
+    private void EnsureTextStyles()
+    {
+        if (labelStyle != null)
+            return;
+
+        labelStyle = new GUIStyle(GUI.skin.label) {
+            fontSize = 20, wordWrap = true, normal = { textColor = Color.black } };
+        headingStyle = new GUIStyle(labelStyle) { fontSize = 29, fontStyle = FontStyle.Bold };
+        statusStyle = new GUIStyle(labelStyle) { fontSize = 22, fontStyle = FontStyle.Bold };
+        noticeStyle = new GUIStyle(labelStyle) { fontSize = 16 };
+        buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 19, wordWrap = true, fixedHeight = 0 };
+        toggleStyle = new GUIStyle(GUI.skin.toggle) {
+            fontSize = 19, wordWrap = true, fixedHeight = 0, normal = { textColor = Color.black },
+            onNormal = { textColor = Color.black }, hover = { textColor = Color.black },
+            onHover = { textColor = Color.black }, active = { textColor = Color.black },
+            onActive = { textColor = Color.black }, focused = { textColor = Color.black },
+            onFocused = { textColor = Color.black }
+        };
+        textAreaStyle = new GUIStyle(GUI.skin.textArea) { fontSize = 20, wordWrap = true };
     }
 
     private void DrawPhase()
@@ -120,8 +256,10 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 Heading("Review setup");
                 Label("Three players work together to rescue as many people as possible. This walkthrough uses one practice dispatch and two draft scenarios. Game days are rounds, not separate visits.");
                 Label("Select a preview condition, or use Random. It stays the same for both scenarios.");
-                chosenCondition = GUILayout.SelectionGrid(chosenCondition, Conditions, 1);
-                skipTimers = GUILayout.Toggle(skipTimers, "Skip countdowns for reviewer walkthrough");
+                chosenCondition = GUILayout.SelectionGrid(chosenCondition, Conditions, 1, buttonStyle,
+                    GUILayout.MinHeight(40 * Conditions.Length));
+                skipTimers = GUILayout.Toggle(skipTimers, "Skip countdowns for reviewer walkthrough", toggleStyle,
+                    GUILayout.MinHeight(38));
                 if (Button("Start practice"))
                 {
                     session = new Session {
@@ -228,7 +366,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 Heading("7. Dispatch outcome");
                 Label(Summary());
                 Label(DiscoveredFrontier());
-                Label($"Total rescued: {game.TotalRescued}/{game.TotalSurvivors}");
+                Status($"Total rescued: {game.TotalRescued}/{game.TotalSurvivors}");
                 if (Button("Open private post-outcome forms")) BeginForms(Phase.PostOutcome);
                 break;
             case Phase.PostOutcome:
@@ -252,7 +390,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 break;
             case Phase.ScenarioResult:
                 Heading("Scenario complete");
-                Label(session.Scores.Last());
+                Status(session.Scores.Last());
                 if (Button(session.ScenarioIndex == 0 ? "Start the second scenario" : "Finish walkthrough"))
                 {
                     if (session.ScenarioIndex == 0) NextScenario();
@@ -261,7 +399,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 break;
             case Phase.Complete:
                 Heading("Walkthrough complete");
-                foreach (string score in session.Scores) Label(score);
+                foreach (string score in session.Scores) Status(score);
                 Label("Nothing was uploaded or saved.");
                 if (Button("Return to setup"))
                 {
@@ -275,7 +413,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     private void DrawPlan()
     {
         int used = draft.Sum(item => item.assignedGroups);
-        Label($"Plan: {Describe(draft)}");
+        Status($"Plan: {Describe(draft)}");
         Label($"{used}/{Mathf.Min(game.DailyDeploymentCap, game.LogisticsRemaining)} points today; " +
               $"{draft.Count}/{game.MaxExpeditionsPerDay} expeditions.");
         var selection = NodeSelectionManager.Instance;
@@ -397,7 +535,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     {
         int remaining = Mathf.Max(0, Mathf.CeilToInt(phaseEnds - Time.unscaledTime));
         if (remaining == 0) return Button(text);
-        Label($"{remaining} seconds remaining");
+        Status($"{remaining} seconds remaining");
         return false;
     }
 
@@ -451,5 +589,6 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     private string Summary() => game.LastDaySummary.Replace("<b>", "").Replace("</b>", "");
     private void Heading(string text) => GUILayout.Label(text, headingStyle);
     private void Label(string text) => GUILayout.Label(text, labelStyle);
-    private static bool Button(string text) => GUILayout.Button(text, GUILayout.MinHeight(28));
+    private void Status(string text) => GUILayout.Label(text, statusStyle);
+    private bool Button(string text) => GUILayout.Button(text, buttonStyle, GUILayout.MinHeight(38));
 }

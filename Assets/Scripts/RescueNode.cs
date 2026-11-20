@@ -59,7 +59,8 @@ public class RescueNode : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (ReviewStudyFlow.IsActive && !ReviewStudyFlow.CanClickMap)
+        // The review UI selects on release so a drag can start over a node.
+        if (ReviewStudyFlow.IsActive)
         {
             return;
         }

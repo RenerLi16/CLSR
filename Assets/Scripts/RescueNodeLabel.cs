@@ -15,7 +15,7 @@ public class RescueNodeLabel : MonoBehaviour
 
     // Label sits above and to the right of its node; its bottom edge stays
     // just above the node so the node itself is never covered.
-    private static readonly Vector3 LabelOffset = new Vector3(0.85f, 1.1f, 0f);
+    private static readonly Vector3 LabelOffset = new Vector3(0.96f, 1.24f, 0f);
 
     private RescueNode rescueNode;
     private ScenarioController scenarioController;
@@ -107,7 +107,7 @@ public class RescueNodeLabel : MonoBehaviour
         labelTransform.position =
             transform.position + LabelOffset;
         labelTransform.localScale = Vector3.one * 0.0083f;
-        labelTransform.sizeDelta = new Vector2(330f, 190f);
+        labelTransform.sizeDelta = new Vector2(360f, 225f);
 
         Canvas canvas = labelObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
@@ -142,13 +142,13 @@ public class RescueNodeLabel : MonoBehaviour
         RectTransform textRect = textObject.GetComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(18f, 10f);
-        textRect.offsetMax = new Vector2(-18f, -10f);
+        textRect.offsetMin = new Vector2(13f, 10f);
+        textRect.offsetMax = new Vector2(-13f, -10f);
 
         labelText = textObject.GetComponent<Text>();
         labelText.font =
             Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        labelText.fontSize = 44;
+        labelText.fontSize = 55;
         labelText.alignment = TextAnchor.MiddleLeft;
         labelText.horizontalOverflow = HorizontalWrapMode.Overflow;
         labelText.verticalOverflow = VerticalWrapMode.Overflow;

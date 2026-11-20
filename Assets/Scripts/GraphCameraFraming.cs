@@ -1,13 +1,52 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-// Keeps the whole rescue graph (nodes, trails, structures and node labels)
-// visible in the part of the screen that the planning panel doesn't cover.
+// Fits the rescue graph in the space beside the planning panel, then applies
+// any player-requested zoom and pan.
 [RequireComponent(typeof(Camera))]
+[DefaultExecutionOrder(100)] // Fit the map after its camera-facing labels have positioned themselves.
 public class GraphCameraFraming : MonoBehaviour
 {
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Attach()
+    private const int MinZoomLevel = -2;
+    private const int MaxZoomLevel = 4;
+    private const float MagnificationPerStep = 0.15f;
+    private const float PanOverscrollFraction = 0.2f;
+
+    private int zoomLevel;
+    private Vector2 panOffset;
+
+    public bool CanZoomOut => zoomLevel > MinZoomLevel;
+    public bool CanZoomIn => zoomLevel < MaxZoomLevel;
+    public bool IsDefaultView => zoomLevel == 0 && panOffset == Vector2.zero;
+
+    public void ZoomOut() => zoomLevel = Mathf.Max(MinZoomLevel, zoomLevel - 1);
+    public void ZoomIn() => zoomLevel = Mathf.Min(MaxZoomLevel, zoomLevel + 1);
+
+    public void ResetView()
+    {
+        zoomLevel = 0;
+        panOffset = Vector2.zero;
+    }
+
+    public void PanByScreenDelta(Vector2 screenDelta)
+    {
+        if (!cam.orthographic || cam.pixelHeight == 0)
+            return;
+
+        // Match the pointer's travel at the current zoom, in either direction.
+        float unitsPerPixel = 2f * cam.orthographicSize / cam.pixelHeight;
+        panOffset += screenDelta * unitsPerPixel;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void AttachOnSceneLoad()
+    {
+        SceneManager.sceneLoaded -= Attach;
+        SceneManager.sceneLoaded += Attach;
+    }
+
+    private static void Attach(Scene scene, LoadSceneMode mode)
     {
         Camera mainCamera = Camera.main;
 
@@ -29,6 +68,7 @@ public class GraphCameraFraming : MonoBehaviour
     private RescuePlanningUI planningUI;
     private RescueNodeLabel[] labels;
     private readonly List<Renderer> graphRenderers = new List<Renderer>();
+    private readonly List<Rect> placedLabels = new List<Rect>();
     private readonly Vector3[] corners = new Vector3[4];
 
     private float minX, maxX, minY, maxY;
@@ -43,6 +83,9 @@ public class GraphCameraFraming : MonoBehaviour
     {
         planningUI = FindAnyObjectByType<RescuePlanningUI>();
         labels = FindObjectsByType<RescueNodeLabel>(FindObjectsSortMode.None);
+        Vector3 up = transform.up;
+        System.Array.Sort(labels, (a, b) =>
+            Vector3.Dot(a.transform.position, up).CompareTo(Vector3.Dot(b.transform.position, up)));
 
         HashSet<Transform> graphRoots = new HashSet<Transform>();
 
@@ -86,6 +129,7 @@ public class GraphCameraFraming : MonoBehaviour
             }
         }
 
+        placedLabels.Clear();
         foreach (RescueNodeLabel label in labels)
         {
             if (label == null || label.LabelRect == null)
@@ -93,12 +137,7 @@ public class GraphCameraFraming : MonoBehaviour
                 continue;
             }
 
-            label.LabelRect.GetWorldCorners(corners);
-
-            foreach (Vector3 corner in corners)
-            {
-                Include(corner);
-            }
+            FitNodeLabel(label.LabelRect);
         }
 
         foreach (WorldLabel worldLabel in WorldLabel.Active)
@@ -116,7 +155,7 @@ public class GraphCameraFraming : MonoBehaviour
             }
         }
 
-                // Screen area to the right of the planning panel, in 0..1 viewport units.
+        // Screen area to the right of the planning panel, in 0..1 viewport units.
         float left = margin;
 
         if (
@@ -139,22 +178,33 @@ public class GraphCameraFraming : MonoBehaviour
         float availableWidth = Mathf.Max(0.1f, right - left);
         float availableHeight = top - bottom;
 
-        // Zoom out only if the graph wouldn't fit at the scene's camera size.
-        float size = Mathf.Max(
+        // Calculate a fresh 1:1 fit before applying the player's zoom level.
+        float fittedSize = Mathf.Max(
             minOrthographicSize,
             (maxY - minY) / (2f * availableHeight),
             (maxX - minX) / (2f * cam.aspect * availableWidth)
         );
+        float size = fittedSize / (1f + zoomLevel * MagnificationPerStep);
         cam.orthographicSize = size;
 
-        // Slide the camera so the graph's centre lands in the middle of that area.
+        float visibleWidth = 2f * size * cam.aspect * availableWidth;
+        float visibleHeight = 2f * size * availableHeight;
+        float panLimitX = GetPanLimit(maxX - minX, visibleWidth);
+        float panLimitY = GetPanLimit(maxY - minY, visibleHeight);
+        panOffset.x = Mathf.Clamp(panOffset.x, -panLimitX, panLimitX);
+        panOffset.y = Mathf.Clamp(panOffset.y, -panLimitY, panLimitY);
+
+        // Centre the fitted view, then offset it in the direction of the drag.
         float targetX = ((left + right) * 0.5f - 0.5f) * 2f * size * cam.aspect;
         float targetY = ((bottom + top) * 0.5f - 0.5f) * 2f * size;
-        float shiftX = (minX + maxX) * 0.5f - targetX;
-        float shiftY = (minY + maxY) * 0.5f - targetY;
+        float shiftX = (minX + maxX) * 0.5f - targetX - panOffset.x;
+        float shiftY = (minY + maxY) * 0.5f - targetY - panOffset.y;
 
         transform.position += transform.right * shiftX + transform.up * shiftY;
     }
+
+    private static float GetPanLimit(float mapSize, float visibleSize) =>
+        Mathf.Max(0f, (mapSize - visibleSize) * 0.5f) + visibleSize * PanOverscrollFraction;
 
     private void Include(Vector3 worldPoint)
     {
@@ -163,5 +213,37 @@ public class GraphCameraFraming : MonoBehaviour
         maxX = Mathf.Max(maxX, p.x);
         minY = Mathf.Min(minY, p.y);
         maxY = Mathf.Max(maxY, p.y);
+    }
+
+    private void FitNodeLabel(RectTransform label)
+    {
+        label.GetWorldCorners(corners);
+        Vector3 lower = transform.InverseTransformPoint(corners[0]);
+        Vector3 upper = transform.InverseTransformPoint(corners[2]);
+        Rect box = Rect.MinMaxRect(lower.x, lower.y, upper.x, upper.y);
+
+        // Lift only cards whose text area would overlap a lower card.
+        const float inset = 0.10f;
+        const float gap = 0.12f;
+        for (int pass = 0; pass < placedLabels.Count; pass++)
+        {
+            float nextY = box.yMin;
+            foreach (Rect placed in placedLabels)
+            {
+                if (box.xMin + inset < placed.xMax - inset && box.xMax - inset > placed.xMin + inset &&
+                    box.yMin < placed.yMax && box.yMax > placed.yMin)
+                    nextY = Mathf.Max(nextY, placed.yMax + gap);
+            }
+            if (nextY <= box.yMin + 0.001f)
+                break;
+            box.y = nextY;
+        }
+        label.position += transform.up * (box.yMin - lower.y);
+        placedLabels.Add(box);
+
+        minX = Mathf.Min(minX, box.xMin);
+        maxX = Mathf.Max(maxX, box.xMax);
+        minY = Mathf.Min(minY, box.yMin);
+        maxY = Mathf.Max(maxY, box.yMax);
     }
 }
