@@ -10,6 +10,7 @@ from .support import NO_AI, build_mock_response
 
 ROUTE = "/v1/support"
 MAX_BODY = 16_384
+MOCK_ONLY_HEADER = "X-CLSR-Mock-Only"
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -49,7 +50,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(400, {"error": "incomplete_body"})
             request = json.loads(body.decode("utf-8"))
             provider = self.server.support_provider
-            if provider is None or (type(request) is dict and request.get("condition") == NO_AI):
+            if (provider is None or self.headers.get(MOCK_ONLY_HEADER) == "1"
+                    or (type(request) is dict and request.get("condition") == NO_AI)):
                 result = build_mock_response(request)
             else:
                 result = provider.generate(request)

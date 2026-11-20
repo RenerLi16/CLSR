@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from backend.openai_provider import (DEFAULT_MODEL, ENDPOINT, MAX_REPLY, PROMPT_VERSION,
                                      OpenAIProvider, ProviderFailure)
-from backend.server import ROUTE, make_server
+from backend.server import MOCK_ONLY_HEADER, ROUTE, make_server
 from backend.support import DISSENT, NO_AI, InvalidSupport
 from backend.tests.test_support import fixture
 
@@ -157,11 +157,11 @@ class OpenAIHarness(unittest.TestCase):
             worker = threading.Thread(target=server.serve_forever)
             worker.start()
             try:
-                def post(request):
+                def post(request, **headers):
                     client = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
                     try:
                         client.request("POST", ROUTE, json.dumps(request),
-                                       {"Content-Type": "application/json"})
+                                       {"Content-Type": "application/json", **headers})
                         response = client.getresponse()
                         return response.status, json.load(response)
                     finally:
@@ -174,6 +174,10 @@ class OpenAIHarness(unittest.TestCase):
 
                 status, reply = post(fixture(NO_AI))
                 self.assertEqual((status, reply["provider"]), (200, "none"))
+                self.assertEqual(len(transport.calls), 1)
+
+                status, reply = post(fixture(), **{MOCK_ONLY_HEADER: "1"})
+                self.assertEqual((status, reply["provider"]), (200, "mock"))
                 self.assertEqual(len(transport.calls), 1)
 
                 transport.result = b"invalid reply"

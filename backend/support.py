@@ -3,7 +3,7 @@
 import re
 
 
-VERSION = "rescue-support-v1"
+VERSION = "rescue-support-v2"
 DIRECT = "direct_recommendation"
 DISSENT = "constructive_dissent"
 NO_AI = "no_ai"
@@ -56,7 +56,8 @@ def validate_request(request):
     require(request["condition"] in (DIRECT, DISSENT, NO_AI))
     context = request["context"]
     fields(context, "day", "total_days", "points_available", "daily_cap",
-           "max_expeditions", "sites", "provisional_plan", "initial_judgments")
+           "max_expeditions", "sites", "released_route_reports",
+           "provisional_plan", "initial_judgments")
     integer(context["total_days"], 1, 14)
     integer(context["day"], 1, context["total_days"])
     integer(context["points_available"], 0, 100)
@@ -68,17 +69,24 @@ def validate_request(request):
     require(type(sites) is list and 1 <= len(sites) <= 64)
     parents = {}
     for site in sites:
-        fields(site, "id", "parent", "known_difficulty", "reported_branch_remaining",
-               "known_remaining_here", "known_remaining_beyond")
+        fields(site, "id", "parent", "known_difficulty", "initial_branch_report",
+               "initial_branch_note", "known_branch_remaining", "known_remaining_here",
+               "known_remaining_beyond", "available_cache_reward")
         node, parent = site["id"], site["parent"]
         site_id(node)
         site_id(parent)
         require(node != "Camp" and node not in parents)
         parents[node] = parent
-        for name in ("known_difficulty", "reported_branch_remaining",
-                     "known_remaining_here", "known_remaining_beyond"):
+        for name in ("known_difficulty", "initial_branch_report", "known_branch_remaining",
+                     "known_remaining_here", "known_remaining_beyond", "available_cache_reward"):
             if site[name] is not None:
                 integer(site[name], 0, 100)
+        note = site["initial_branch_note"]
+        if note is not None:
+            require(parent == "Camp" and type(note) is str and 1 <= len(note) <= 200
+                    and note.isprintable())
+        if site["initial_branch_report"] is not None:
+            require(parent == "Camp")
     for target in parents:
         seen = set()
         current = target
@@ -86,6 +94,11 @@ def validate_request(request):
             require(current in parents and current not in seen)
             seen.add(current)
             current = parents[current]
+
+    reports = context["released_route_reports"]
+    require(type(reports) is list and len(reports) <= 14)
+    for report in reports:
+        require(type(report) is str and 1 <= len(report) <= 300 and report.isprintable())
 
     max_expeditions = context["max_expeditions"]
     validate_plan(context["provisional_plan"], parents, budget, max_expeditions)

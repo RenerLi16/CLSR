@@ -10,7 +10,7 @@ import urllib.request
 from .support import DIRECT, DISSENT, validate_model_output, validate_request
 
 
-PROMPT_VERSION = "rescue-support-en-1"
+PROMPT_VERSION = "rescue-support-en-2"
 MAX_REPLY = 32_768
 SOCKET_TIMEOUT = 8
 ENDPOINT = "https://api.openai.com/v1/responses"
@@ -50,9 +50,12 @@ threshold at every site it attempts, or it stops before that site. The points ar
 up along the path. Passing sites rescues survivors there; a blocked site reveals the
 blocking threshold but not whether anyone is there. All assigned points are spent even
 if blocked. The team dispatches once per day, can choose not to send expeditions, and
-carries unspent points forward. Treat reported branch counts as public reports, not proof
-of exact locations. A null field is unknown, not zero. Do not assume exact survivor
-locations, thresholds, upcoming changes, or that any expedition is guaranteed to succeed.
+carries unspent points forward. A positive available_cache_reward is paid once, at the start
+of the next day after reaching it. An initial_branch_report is an initial report, not a
+current count; known_branch_remaining is the current aggregate for a known branch. Neither
+specifies exact locations. Read released_route_reports as public announcements, not license
+to infer unreported absolute thresholds. A null field is unavailable, not zero. Do not
+assume exact survivor locations, thresholds, upcoming changes, or guaranteed success.
 
 Return one JSON object with exactly "message" and "recommended_plan". The message must be
 one plain-text paragraph, 25–360 characters, without markup. Use exact site IDs.

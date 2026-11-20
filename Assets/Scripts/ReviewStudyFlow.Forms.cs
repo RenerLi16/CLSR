@@ -50,11 +50,11 @@ public sealed partial class ReviewStudyFlow
             new[] { "Not at all", "A little", "Moderately", "A lot", "Completely" });
         var influences = new List<string> { "Initial judgment", "Team discussion", "Map and observations",
             "Survivor information and logistics requirements" };
-        if (session.Condition != 1) influences.Add("AI message");
+        if (showedSupportMessage) influences.Add("AI message");
         influences.Add("Other");
         Choice("influence", "What most influenced your final judgment?", influences.ToArray());
         Written("reflection", "Briefly explain what changed your mind, or why your view stayed the same.", 600);
-        if (session.Condition == 1) return;
+        if (!showedSupportMessage) return;
 
         Choice("usefulness", "How useful was the AI message for your decision-making?",
             new[] { "Not at all", "Slightly", "Moderately", "Very", "Extremely", "Unable to judge" });

@@ -6,23 +6,25 @@ import threading
 import unittest
 
 from backend.server import MAX_BODY, ROUTE, make_server
+from backend.support import VERSION
 
 
 def fixture(condition="direct_recommendation"):
     def site(name, parent, count=None):
         return {
             "id": name, "parent": parent, "known_difficulty": None,
-            "reported_branch_remaining": count, "known_remaining_here": None,
-            "known_remaining_beyond": None,
+            "initial_branch_report": count, "initial_branch_note": None,
+            "known_branch_remaining": None, "known_remaining_here": None,
+            "known_remaining_beyond": None, "available_cache_reward": None,
         }
 
     west = [{"target": "West Fork", "points": 2}]
     east = [{"target": "East Fork", "points": 1}]
     return {
-        "version": "rescue-support-v1", "condition": condition,
+        "version": VERSION, "condition": condition,
         "context": {
             "day": 1, "total_days": 3, "points_available": 9, "daily_cap": 4,
-            "max_expeditions": 2, "provisional_plan": west,
+            "max_expeditions": 2, "provisional_plan": west, "released_route_reports": [],
             "sites": [site("West Fork", "Camp", 3), site("Miner's Hut", "West Fork"),
                       site("East Fork", "Camp", 2)],
             "initial_judgments": [

@@ -4,11 +4,11 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// Shared-screen review only. No account, persistent storage, or service calls.
+// Shared-screen review only, with an optional local mock backend.
 public sealed partial class ReviewStudyFlow : MonoBehaviour
 {
     private enum Phase { Setup, Practice, PracticeResult, Observe, Handoff, Initial, Discuss,
-        Intervention, Reconsider, FinalPlan, PreOutcome, Result, PostOutcome, Reasoning,
+        WaitForSupport, Intervention, Reconsider, FinalPlan, PreOutcome, Result, PostOutcome, Reasoning,
         ScenarioResult, Complete }
 
     private const string PracticeScene = "PrototypeMap";
@@ -29,6 +29,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     {
         public int Condition;
         public bool SkipTimers;
+        public bool UseMockBackend;
         public int ScenarioIndex = -1;
         public string[] Order;
         public readonly List<string> Scores = new();
@@ -59,7 +60,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     private bool mapPointerHeld, mapDragging;
     private Phase phase, form;
     private int player, chosenCondition;
-    private bool skipTimers, showDestinations;
+    private bool skipTimers, showDestinations, useMockBackend;
     private Vector2 scroll;
     private GUIStyle labelStyle, headingStyle, statusStyle, noticeStyle;
     private GUIStyle buttonStyle, toggleStyle, textAreaStyle;
@@ -197,7 +198,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         scroll = GUILayout.BeginScrollView(scroll);
         GUILayout.BeginVertical(GUILayout.Width(PanelWidth - 38));
         GUILayout.Label("CASCADE LAB / REVIEW BETA", headingStyle);
-        GUILayout.Label("Demonstration only. Sample messages; no live AI. No responses are saved or sent.", noticeStyle);
+        GUILayout.Label("Demonstration only. Use fictional answers. No live AI or saved responses.", noticeStyle);
         if (phase != Phase.Setup && phase != Phase.Complete)
         {
             Label(scenario.CurrentScenario.scenarioName + (session.ScenarioIndex < 0
@@ -282,11 +283,17 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                     GUILayout.MinHeight((PanelButtonHeight + 4f) * Conditions.Length));
                 skipTimers = GUILayout.Toggle(skipTimers, "Skip countdowns for reviewer walkthrough", toggleStyle,
                     GUILayout.MinHeight(PanelButtonHeight));
+                bool localBackendAvailable = Application.isEditor ||
+                    (Debug.isDebugBuild && Application.platform != RuntimePlatform.WebGLPlayer);
+                if (localBackendAvailable)
+                    useMockBackend = GUILayout.Toggle(useMockBackend, "Use local mock backend", toggleStyle,
+                        GUILayout.MinHeight(PanelButtonHeight));
                 if (Button("Start practice"))
                 {
                     session = new Session {
                         Condition = chosenCondition == 0 ? UnityEngine.Random.Range(1, 4) : chosenCondition,
-                        SkipTimers = skipTimers, Order = (string[])MapScenes.Clone()
+                        SkipTimers = skipTimers, UseMockBackend = localBackendAvailable && useMockBackend,
+                        Order = (string[])MapScenes.Clone()
                     };
                     if (UnityEngine.Random.Range(0, 2) == 1) Array.Reverse(session.Order);
                     Load(PracticeScene, Phase.Practice);
@@ -345,13 +352,16 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 if (TimedButton("Lock provisional plan"))
                 {
                     provisional = CopyPlan();
-                    message = BuildSampleMessage();
-                    Timed(Phase.Intervention, 15);
+                    StartIntervention();
                 }
+                break;
+            case Phase.WaitForSupport:
+                Heading("4. Decision pause");
+                Label("Waiting for the local mock backend…");
                 break;
             case Phase.Intervention:
                 Heading("4. Decision pause");
-                Label(session.Condition == 1 ? "Neutral message" : "Mock AI message (local example, no live model)");
+                Label(interventionLabel);
                 Label(message);
                 if (TimedButton("Continue to further discussion")) Timed(Phase.Reconsider, 45);
                 break;
@@ -422,7 +432,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
             case Phase.Complete:
                 Heading("Walkthrough complete");
                 foreach (string score in session.Scores) Status(score);
-                Label("Nothing was uploaded or saved.");
+                Label("No responses were saved. Mock requests, if enabled, stayed on this computer.");
                 if (Button("Return to setup"))
                 {
                     session = null;
@@ -544,7 +554,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         showDestinations = false;
         openChoice = null;
         if (clearError) error = null;
-        GUI.FocusControl(null);
+        if (Event.current != null) GUI.FocusControl(null);
     }
 
     private void Timed(Phase next, int seconds)

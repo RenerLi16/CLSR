@@ -9,6 +9,9 @@ public class ScenarioController : MonoBehaviour
 
     private readonly Dictionary<string, RescueNode> sceneNodes =
         new Dictionary<string, RescueNode>();
+    private readonly List<string> releasedRouteReports = new List<string>();
+
+    public IReadOnlyList<string> ReleasedRouteReports => releasedRouteReports;
 
     // The scenario asset as authored. During play the controller works on a
     // copy, so intelligence reports never overwrite the asset itself.
@@ -261,6 +264,7 @@ public class ScenarioController : MonoBehaviour
 
     public void ResetSceneNodes()
     {
+        releasedRouteReports.Clear();
         // Undo any intelligence-report changes.
         foreach (RescueNodeDefinition definition in scenario.nodes)
         {
@@ -317,6 +321,7 @@ public class ScenarioController : MonoBehaviour
             if (!string.IsNullOrWhiteSpace(report.message))
             {
                 messages.Add(report.message);
+                releasedRouteReports.Add(report.message);
             }
         }
 

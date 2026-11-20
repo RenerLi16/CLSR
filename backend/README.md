@@ -1,4 +1,4 @@
-# CLSR AI backend — Stage 2: OpenAI adapter and local harness
+# CLSR AI backend — Stage 3: Unity mock connection
 
 Run from the Unity project root. Python 3.10+; no dependencies or API key.
 
@@ -14,15 +14,28 @@ OpenAI, read a real key, or incur charges. To run the mock server separately:
 python3 -B -m backend.server --port 8787
 ```
 
+In Unity Review setup, select **Use local mock backend** before starting the
+walkthrough. With the option off, Unity uses offline samples. The option is
+limited to the Editor and native development builds. It never selects OpenAI:
+the request explicitly asks the backend to use the mock. No-AI stays offline
+regardless of this setting. See [review instructions](../REVIEW.md).
+
 ## Request and response
 
-`POST /v1/support` accepts the versioned rescue snapshot in the synthetic
-fixture. Both AI conditions accept the same inputs: the public site tree and
+`POST /v1/support` accepts the `rescue-support-v2` snapshot.
+Both AI conditions accept the same inputs: the public site tree and
 observations, day's logistics limits, provisional plan, and three anonymous,
 structured initial judgments. Unknowns use JSON `null`. The server rejects
 unexpected fields, so names, written responses and unrevealed scenario
 definitions do not belong in the payload. It cannot verify that an observation
 sent in an allowed field was actually visible in Unity.
+
+The Unity client distinguishes initial branch reports from updated survivor
+counts and sends only released route announcements. An announcement that a
+route costs one point less does not reveal its absolute threshold. Cache rewards
+are included only for currently visible, unclaimed storage markers. Private
+judgments are limited to branch, structured reason and draft expedition plan;
+confidence and written responses never leave Unity.
 
 The adapter uses the same public game data, structured anonymous judgments and
 generation settings for both roles. Only the role instruction differs. It
@@ -36,8 +49,8 @@ Provider replies that cannot be validated return a short error code; provider
 timeouts return HTTP 504. There are no automatic retries or fallback messages.
 Valid OpenAI responses include the configured model ID and prompt version. The
 checks do not establish factual accuracy, strategic quality, or that a question
-is free of implied advice. The server doesn't save responses, serve browsers,
-or connect to Unity yet. Do not expose it on the internet.
+is free of implied advice. The server does not save responses or serve browsers.
+Do not expose it on the internet.
 
 ## Configuration for a later approved live test
 
@@ -58,12 +71,25 @@ guarantee of zero provider retention). The English prompts and the
 settings are development defaults, not final research settings. No live
 OpenAI request was made in Stage 2.
 
-## Next checkpoints
+## Unity harness
 
-1. Connect the review game to the mock backend. Test the Unity snapshot against what a player can
-   actually see, including cache information and revealed route changes, plus
-   skipped responses, duplicate requests, and intervention timing. The no-AI
-   arm should stay local and not send a request.
-2. Run an explicitly approved live smoke test using fictional data, then use
-   a scenario-based evaluation harness for both AI modes. Set up human scoring
-   for factual accuracy and role fidelity before relying on generated messages.
+A separate harness starts the mock service and uses the Unity Editor to run
+synthetic Cedar Valley cases on a temporary project copy. It requires an
+installed, licensed Editor and free localhost port 8787. Stop any local mock
+server before running it.
+
+```sh
+python3 -B -m backend.tests.run_unity_harness --unity /path/to/Unity
+```
+
+The harness checks snapshots before/after a blocked expedition, cache claim,
+route report and reset. It exercises the Unity request and reading pause,
+including a failed call. It does not click through the GUI or launch a WebGL
+build.
+
+## Next checkpoint
+
+Once the Unity mock walkthrough has been verified, run an explicitly approved
+live smoke test using fictional data. Then use a scenario-based evaluation
+harness for both AI modes and set up human scoring for factual accuracy and
+role fidelity before relying on generated messages.

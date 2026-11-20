@@ -11,6 +11,8 @@ public class StorageCampMarker : MonoBehaviour
     [SerializeField]
     private string nodeId;
 
+    public string NodeId => nodeId;
+
     private int reward;
     private WorldLabel campLabel;
     private RescueGameController gameController;

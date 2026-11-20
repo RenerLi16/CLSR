@@ -35,7 +35,19 @@ draft scenarios, Cedar Valley and Blackridge, in either order.
   updated from manpower to logistics points. Registration, consent and eligibility
   items are outside the game.
 
-The two AI conditions use labeled local examples, not model calls. The same condition
-is held across both scenarios. The preview has no data export, consent form, login,
-online rooms, or storage integration. Answers are not persisted or uploaded. This
-build is suitable for reviewing the flow, not for running or collecting study data.
+The two AI conditions use labeled local examples by default. In the Unity Editor
+or a native development build, enable **Use local mock backend** in Review setup
+to test the local connection. Start the backend first (from the project folder):
+
+```sh
+python3 -B -m backend.server --port 8787
+```
+
+Lock the provisional plan to send one request. The 15-second reading timer starts
+when the mock message or unavailable notice appears. No AI uses a local neutral
+message and sends nothing. The web preview still uses offline examples only.
+
+Use fictional answers. The preview does not call a live model, save responses,
+or send them over the internet. It has no data export, consent form, login, online
+rooms, or storage integration. This is suitable for reviewing the flow, not for
+running or collecting study data.
