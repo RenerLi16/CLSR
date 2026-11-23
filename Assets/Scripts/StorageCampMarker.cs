@@ -31,15 +31,16 @@ public class StorageCampMarker : MonoBehaviour
         Camera activeCamera = Camera.main;
         Vector3 up = activeCamera != null ? activeCamera.transform.up : Vector3.up;
         Vector3 right = activeCamera != null ? activeCamera.transform.right : Vector3.right;
+        float labelScale = WorldLabel.SceneScale;
 
         campLabel = WorldLabel.Create(
             "StorageTag_" + nodeId,
-            transform.position + up * (transform.localScale.y * 0.75f + 0.3f) + right * 0.58f,
+            transform.position + up * (transform.localScale.y * 0.75f + 0.3f * labelScale) +
+                right * (0.58f * labelScale),
             new Vector2(300f, 76f),
             new Vector2(1f, 0.5f),
             46,
-            TextAnchor.MiddleCenter,
-            true
+            TextAnchor.MiddleCenter
         );
         campLabel.transform.SetParent(transform.parent, true);
     }

@@ -4,14 +4,8 @@ using UnityEngine.UI;
 [RequireComponent(typeof(RescueNode))]
 public class RescueNodeLabel : MonoBehaviour
 {
-    private static readonly Color UnknownColor =
-        new Color(0.66f, 0.66f, 0.66f, 1f);
-
-    private static readonly Color KnownColor =
-        new Color(0.094f, 0.702f, 0.541f, 1f);
-
-    private static readonly string UnknownHex = ColorUtility.ToHtmlStringRGB(UnknownColor);
-    private static readonly string KnownHex = ColorUtility.ToHtmlStringRGB(KnownColor);
+    private static readonly string UnknownHex = ColorUtility.ToHtmlStringRGB(FrostUiTheme.Frost);
+    private static readonly string KnownHex = ColorUtility.ToHtmlStringRGB(FrostUiTheme.Rescued);
 
     // Label sits above and to the right of its node; its bottom edge stays
     // just above the node so the node itself is never covered.
@@ -51,8 +45,9 @@ public class RescueNodeLabel : MonoBehaviour
             labelTransform.rotation = activeCamera.transform.rotation;
         }
 
-        // Keep the layout bounds in place even when hidden, so hovering does not reframe the map.
-        labelCanvas.enabled = !ReviewStudyFlow.IsActive || ReviewStudyFlow.HoveredNode == rescueNode;
+        // The study flow draws a screen-space hover card. Keep the legacy label's bounds
+        // for camera framing and render it only outside the study flow.
+        labelCanvas.enabled = !ReviewStudyFlow.IsActive;
         if (!labelCanvas.enabled)
             return;
 
@@ -119,24 +114,6 @@ public class RescueNodeLabel : MonoBehaviour
         labelCanvas.sortingOrder = 20;
         labelCanvas.enabled = false;
 
-        GameObject backgroundObject = new GameObject(
-            "Background",
-            typeof(RectTransform),
-            typeof(Image)
-        );
-        backgroundObject.transform.SetParent(labelObject.transform, false);
-
-        RectTransform backgroundRect =
-            backgroundObject.GetComponent<RectTransform>();
-        backgroundRect.anchorMin = Vector2.zero;
-        backgroundRect.anchorMax = Vector2.one;
-        backgroundRect.offsetMin = Vector2.zero;
-        backgroundRect.offsetMax = Vector2.zero;
-
-        Image background = backgroundObject.GetComponent<Image>();
-        background.color = new Color(0.16f, 0.16f, 0.16f, 0.92f);
-        background.raycastTarget = false;
-
         GameObject textObject = new GameObject(
             "Text",
             typeof(RectTransform),
@@ -151,14 +128,14 @@ public class RescueNodeLabel : MonoBehaviour
         textRect.offsetMax = new Vector2(-13f, -10f);
 
         labelText = textObject.GetComponent<Text>();
-        labelText.font =
-            Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        labelText.font = ReviewStudyFlow.StudyFont;
         labelText.fontSize = 55;
         labelText.alignment = TextAnchor.MiddleLeft;
         labelText.horizontalOverflow = HorizontalWrapMode.Overflow;
         labelText.verticalOverflow = VerticalWrapMode.Overflow;
         labelText.raycastTarget = false;
         labelText.text = Line("HERE", false, 0) + "\n" + Line("BEYOND", false, 0) + "\n" + Line("DIFF", false, 0);
-        labelText.color = Color.white;
+        labelText.color = FrostUiTheme.Enamel;
+        WorldLabel.AddReadabilityOutline(labelText);
     }
 }

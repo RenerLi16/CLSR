@@ -1,0 +1,42 @@
+fileFormatVersion: 2
+guid: 14a922bbd27f5d2b98daa2c32a1da809
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Snow
+    second: {fileID: 2100000, guid: c4518ea6de3f55ceaf22a224d4d11bd6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PackedSnow
+    second: {fileID: 2100000, guid: 5604c1c304d7513987d138d695aeba37, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PineBark
+    second: {fileID: 2100000, guid: 4dfbb3364140545783daff4212037ce1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PineNeedles
+    second: {fileID: 2100000, guid: 450f069826d855499f4c197bfb4b7ec6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DeepPine
+    second: {fileID: 2100000, guid: 9757f2253a3f50248f2203d95a8dfe47, type: 2}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 2
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    useFileScale: 0
+  tangentSpace:
+    normalImportMode: 0
+    tangentImportMode: 3

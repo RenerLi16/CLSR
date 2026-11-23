@@ -22,12 +22,11 @@ public class BranchSign : MonoBehaviour
         Vector3 up = activeCamera != null ? activeCamera.transform.up : Vector3.up;
         label = WorldLabel.Create(
             "SignLabel_" + branchName,
-            transform.position + up * 0.8f,
+            transform.position + up * (0.8f * WorldLabel.SceneScale),
             new Vector2(625f, 224f),
             new Vector2(0f, 0.5f),
             47,
-            TextAnchor.MiddleLeft,
-            false
+            TextAnchor.MiddleLeft
         );
         label.transform.SetParent(transform, true);
     }
@@ -56,9 +55,9 @@ public class BranchSign : MonoBehaviour
             return;
         }
 
-        string report =
-            "Report: " + branch.reportedSurvivors +
-            (branch.reportedSurvivors == 1 ? " survivor" : " survivors");
+        int estimate = scenarioController.GetBranchEstimate(branch);
+        string report = (scenarioController.HasRevisedBranchEstimate(branch) ? "Revised: " : "Report: ") +
+            estimate + (estimate == 1 ? " survivor" : " survivors");
 
         if (
             DesignerView.TruthVisible &&

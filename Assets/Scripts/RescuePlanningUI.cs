@@ -382,7 +382,7 @@ public class RescuePlanningUI : MonoBehaviour
     {
         GameObject textObject = CreateUIObject(objectName, parent);
         Text text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = ReviewStudyFlow.StudyFont;
         text.fontSize = fontSize;
         text.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
         text.supportRichText = true;
@@ -436,7 +436,7 @@ public class RescuePlanningUI : MonoBehaviour
 
         GameObject labelObject = CreateUIObject("Label", buttonObject.transform);
         Text labelText = labelObject.AddComponent<Text>();
-        labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        labelText.font = ReviewStudyFlow.StudyFont;
         labelText.text = label;
         labelText.fontSize = fontSize;
         labelText.fontStyle = FontStyle.Bold;

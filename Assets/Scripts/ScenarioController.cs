@@ -1,6 +1,13 @@
 using System.Collections.Generic;
+using CLSR.Simulation;
 using UnityEngine;
 
+/// <summary>
+/// Loads the authored scenario into the engine-independent
+/// <see cref="RescueSimulation"/> and connects it to the scene. The simulation
+/// is the single source of truth for rules, hidden values and discovery; the
+/// scene nodes only mirror its state for rendering.
+/// </summary>
 public class ScenarioController : MonoBehaviour
 {
     [Header("Scenario")]
@@ -9,9 +16,7 @@ public class ScenarioController : MonoBehaviour
 
     private readonly Dictionary<string, RescueNode> sceneNodes =
         new Dictionary<string, RescueNode>();
-    private readonly List<string> releasedRouteReports = new List<string>();
-
-    public IReadOnlyList<string> ReleasedRouteReports => releasedRouteReports;
+    private HashSet<string> publicCaches;
 
     // The scenario asset as authored. During play the controller works on a
     // copy, so intelligence reports never overwrite the asset itself.
@@ -22,7 +27,20 @@ public class ScenarioController : MonoBehaviour
         get { return scenario; }
     }
 
+    public ScenarioSpec Spec { get; private set; }
+    public RescueSimulation Simulation { get; private set; }
     public bool IsReady { get; private set; }
+
+    public IReadOnlyList<string> ReleasedRouteReports => Simulation.ReleasedReports;
+    public bool HasPendingBranchReports => Simulation.HasPendingBranchReports;
+
+    public bool HasRevisedBranchEstimate(BranchReport branch) => Simulation.HasRevisedEstimate(branch.rootNodeId);
+
+    public int GetBranchEstimate(BranchReport branch)
+    {
+        BranchReportSpec spec = Spec.FindBranch(branch.rootNodeId);
+        return spec != null ? Simulation.BranchEstimate(spec) : branch.reportedSurvivors;
+    }
 
     private void Awake()
     {
@@ -39,8 +57,11 @@ public class ScenarioController : MonoBehaviour
             return;
         }
 
-        if (!ValidateScenario())
+        ScenarioSpec spec = ToSpec(scenario);
+        List<string> errors = spec.Validate();
+        if (errors.Count > 0)
         {
+            foreach (string error in errors) Debug.LogError(error);
             Debug.LogError("Scenario validation failed. Gameplay initialization stopped.");
             return;
         }
@@ -48,12 +69,12 @@ public class ScenarioController : MonoBehaviour
         sourceScenario = scenario;
         scenario = Instantiate(sourceScenario);
         scenario.name = sourceScenario.name + " (runtime)";
+        Spec = spec;
+        Simulation = new RescueSimulation(spec);
 
         sceneNodes.Clear();
 
-        RescueNode[] foundNodes = FindObjectsByType<RescueNode>();
-
-        foreach (RescueNode node in foundNodes)
+        foreach (RescueNode node in FindObjectsByType<RescueNode>())
         {
             if (sceneNodes.ContainsKey(node.nodeId))
             {
@@ -67,76 +88,48 @@ public class ScenarioController : MonoBehaviour
         foreach (RescueNodeDefinition definition in scenario.nodes)
         {
             // Camp is not an ordinary selectable rescue node.
-            if (definition.nodeId == "Camp")
+            if (definition.nodeId == ScenarioSpec.CampId)
             {
                 continue;
             }
 
-            if (sceneNodes.TryGetValue(
-                definition.nodeId,
-                out RescueNode sceneNode))
+            if (sceneNodes.TryGetValue(definition.nodeId, out RescueNode sceneNode))
             {
                 sceneNode.LoadDefinition(definition);
             }
             else
             {
-                Debug.LogWarning(
-                    "No scene node found for ID: " + definition.nodeId
-                );
+                Debug.LogWarning("No scene node found for ID: " + definition.nodeId);
             }
         }
 
         Debug.Log("Loaded scenario: " + scenario.scenarioName);
-
-        foreach (RescueNodeDefinition definition in scenario.nodes)
-        {
-            if (definition.parentNodeId == "Camp")
-            {
-                Debug.Log(
-                    definition.nodeId +
-                    " branch survivors: " +
-                    CountBranchSurvivors(definition.nodeId)
-                );
-            }
-        }
-
         IsReady = true;
     }
 
-    public int CountBranchSurvivors(string rootNodeId)
+    /// <summary>Converts the authored asset to the engine-independent specification.</summary>
+    public static ScenarioSpec ToSpec(RescueScenarioData data)
     {
-        return CountNodeAndChildren(rootNodeId);
-    }
+        var nodes = new List<NodeSpec>();
+        foreach (RescueNodeDefinition node in data.nodes)
+            nodes.Add(new NodeSpec(node.nodeId, node.parentNodeId, node.depth, node.difficulty,
+                node.survivorCount, node.logisticsReward));
 
-    public int CountRemainingBranchSurvivors(string rootNodeId)
-    {
-        RescueNodeDefinition definition = GetDefinition(rootNodeId);
+        var branches = new List<BranchReportSpec>();
+        foreach (BranchReport branch in data.branches)
+            branches.Add(new BranchReportSpec(branch.branchName, branch.rootNodeId, branch.reportedSurvivors, branch.note));
 
-        if (definition == null)
+        var reports = new List<IntelReportSpec>();
+        foreach (IntelligenceReport report in data.intelligenceReports)
         {
-            return 0;
+            var revisions = new List<EstimateRevisionSpec>();
+            foreach (BranchEstimateRevision revision in report.revisedEstimates)
+                revisions.Add(new EstimateRevisionSpec(revision.rootNodeId, revision.reportedSurvivors));
+            reports.Add(new IntelReportSpec(report.afterDay, report.nodeId, report.newDifficulty, revisions, report.message));
         }
 
-        int remainingAtNode = definition.survivorCount;
-
-        if (
-            sceneNodes.TryGetValue(rootNodeId, out RescueNode sceneNode) &&
-            sceneNode.survivorsRescued
-        )
-        {
-            remainingAtNode = 0;
-        }
-
-        foreach (RescueNodeDefinition possibleChild in scenario.nodes)
-        {
-            if (possibleChild.parentNodeId == rootNodeId)
-            {
-                remainingAtNode +=
-                    CountRemainingBranchSurvivors(possibleChild.nodeId);
-            }
-        }
-
-        return remainingAtNode;
+        return new ScenarioSpec(data.scenarioName, data.totalDays, data.totalLogisticsPoints,
+            data.dailyDeploymentCap, data.maxExpeditionsPerDay, data.briefing, nodes, branches, reports);
     }
 
     // ----- What the player is allowed to know -----
@@ -146,81 +139,60 @@ public class ScenarioController : MonoBehaviour
     // HERE and BEYOND are revealed only once a team has passed the node.
     // Passing a junction also reveals a separate aggregate for each immediate
     // child branch; it does not reveal an unreached child's HERE or DIFF.
+    // All of this is computed by PublicView; UI and AI payloads read View().
 
-    public bool IsDifficultyKnown(string nodeId)
+    /// <summary>Storage camps announced on this map (their markers are visible).</summary>
+    public ICollection<string> PublicCacheIds
     {
-        return
-            sceneNodes.TryGetValue(nodeId, out RescueNode sceneNode) &&
-            sceneNode.explored;
+        get
+        {
+            if (publicCaches == null)
+            {
+                publicCaches = new HashSet<string>();
+                foreach (StorageCampMarker marker in FindObjectsByType<StorageCampMarker>(FindObjectsSortMode.None))
+                    if (marker.isActiveAndEnabled) publicCaches.Add(marker.NodeId);
+            }
+            return publicCaches;
+        }
     }
 
-    public bool AreSurvivorCountsKnown(string nodeId)
-    {
-        return
-            sceneNodes.TryGetValue(nodeId, out RescueNode sceneNode) &&
-            sceneNode.reached;
-    }
+    /// <summary>The player-visible state. Everything participant-facing should read this.</summary>
+    public PublicView View() => Simulation.View(PublicCacheIds);
+
+    public PublicNode GetPublicNode(string nodeId) => View().Get(nodeId);
+
+    public bool IsDifficultyKnown(string nodeId) => Simulation.IsExplored(nodeId);
+
+    public bool AreSurvivorCountsKnown(string nodeId) => Simulation.IsReached(nodeId);
 
     public bool TryGetDiscoveredBranchCount(string nodeId, out int remaining)
     {
-        remaining = 0;
-        RescueNodeDefinition definition = GetDefinition(nodeId);
-        if (definition == null || string.IsNullOrEmpty(definition.parentNodeId) ||
-            !AreSurvivorCountsKnown(definition.parentNodeId))
-            return false;
-
-        remaining = CountRemainingBranchSurvivors(nodeId);
-        return true;
+        PublicNode node = GetPublicNode(nodeId);
+        remaining = node?.KnownBranchRemaining ?? 0;
+        // Keep the original meaning: a count discovered by passing the parent junction.
+        return node != null && node.KnownBranchRemaining.HasValue && Simulation.IsReached(node.ParentId);
     }
+
+    // ----- Ground truth: designer view, scoring and legacy prototype only -----
+
+    public int CountBranchSurvivors(string rootNodeId)
+    {
+        NodeSpec node = Spec.Get(rootNodeId);
+        if (node == null) return 0;
+        int total = node.Survivors;
+        foreach (string child in Spec.ChildrenOf(rootNodeId)) total += CountBranchSurvivors(child);
+        return total;
+    }
+
+    public int CountRemainingBranchSurvivors(string rootNodeId) => Simulation.RemainingInSubtree(rootNodeId);
 
     /// <summary>Survivors still waiting at this node itself.</summary>
-    public int CountRemainingHere(string nodeId)
-    {
-        RescueNodeDefinition definition = GetDefinition(nodeId);
-
-        if (definition == null)
-        {
-            return 0;
-        }
-
-        if (
-            sceneNodes.TryGetValue(nodeId, out RescueNode sceneNode) &&
-            sceneNode.survivorsRescued
-        )
-        {
-            return 0;
-        }
-
-        return definition.survivorCount;
-    }
+    public int CountRemainingHere(string nodeId) => Simulation.RemainingHere(nodeId);
 
     /// <summary>Survivors still waiting further along the branch past this node.</summary>
-    public int CountRemainingBeyond(string nodeId)
-    {
-        int total = 0;
+    public int CountRemainingBeyond(string nodeId) => Simulation.RemainingBeyond(nodeId);
 
-        foreach (RescueNodeDefinition possibleChild in scenario.nodes)
-        {
-            if (possibleChild.parentNodeId == nodeId)
-            {
-                total += CountRemainingBranchSurvivors(possibleChild.nodeId);
-            }
-        }
-
-        return total;
-    }
-
-    public int CountTotalSurvivors()
-    {
-        int total = 0;
-
-        foreach (RescueNodeDefinition definition in scenario.nodes)
-        {
-            total += definition.survivorCount;
-        }
-
-        return total;
-    }
+    public int CountTotalSurvivors() => Spec.TotalSurvivors;
 
     public RescueNodeDefinition GetDefinition(string nodeId)
     {
@@ -234,38 +206,34 @@ public class ScenarioController : MonoBehaviour
 
     public List<RescueNodeDefinition> GetPathFromCamp(string targetNodeId)
     {
-        List<RescueNodeDefinition> reversePath =
-            new List<RescueNodeDefinition>();
-        HashSet<string> visited = new HashSet<string>();
-
-        RescueNodeDefinition current = GetDefinition(targetNodeId);
-
-        while (current != null && current.nodeId != "Camp")
-        {
-            if (!visited.Add(current.nodeId))
-            {
-                Debug.LogError("Scenario contains a parent cycle at " + current.nodeId + ".");
-                return new List<RescueNodeDefinition>();
-            }
-
-            reversePath.Add(current);
-            current = GetDefinition(current.parentNodeId);
-        }
-
-        if (current == null)
-        {
-            Debug.LogError("Node " + targetNodeId + " does not connect back to Camp.");
-            return new List<RescueNodeDefinition>();
-        }
-
-        reversePath.Reverse();
-        return reversePath;
+        var path = new List<RescueNodeDefinition>();
+        foreach (NodeSpec node in Spec.PathFromCamp(targetNodeId))
+            path.Add(GetDefinition(node.Id));
+        return path;
     }
 
+    /// <summary>Copies the simulation's discovery state and current thresholds to the scene.</summary>
+    public void SyncSceneFromSimulation()
+    {
+        foreach (RescueNodeDefinition definition in scenario.nodes)
+        {
+            string id = definition.nodeId;
+            int current = Simulation.CurrentDifficulty(id);
+            definition.difficulty = current;
+            if (!sceneNodes.TryGetValue(id, out RescueNode sceneNode)) continue;
+
+            sceneNode.difficulty = current;
+            if (Simulation.IsExplored(id) &&
+                (!sceneNode.explored || sceneNode.reached != Simulation.IsReached(id)))
+                sceneNode.RevealEncounter(Simulation.IsReached(id));
+            if (Simulation.IsRescued(id) && !sceneNode.survivorsRescued)
+                sceneNode.MarkSurvivorsRescued();
+        }
+    }
+
+    /// <summary>Restores scene visuals after the simulation has been reset.</summary>
     public void ResetSceneNodes()
     {
-        releasedRouteReports.Clear();
-        // Undo any intelligence-report changes.
         foreach (RescueNodeDefinition definition in scenario.nodes)
         {
             RescueNodeDefinition original =
@@ -288,169 +256,7 @@ public class ScenarioController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Applies the reports scheduled after <paramref name="finishedDay"/> and
-    /// returns their messages for the day summary.
-    /// </summary>
-    public List<string> ApplyIntelligenceReports(int finishedDay)
-    {
-        List<string> messages = new List<string>();
+    public IEnumerable<string> PendingBranchReportMessages() => Simulation.PendingBranchReportMessages();
 
-        foreach (IntelligenceReport report in scenario.intelligenceReports)
-        {
-            if (report.afterDay != finishedDay)
-            {
-                continue;
-            }
-
-            RescueNodeDefinition definition = GetDefinition(report.nodeId);
-
-            if (definition == null)
-            {
-                Debug.LogWarning("Intelligence report names unknown node " + report.nodeId + ".");
-                continue;
-            }
-
-            definition.difficulty = report.newDifficulty;
-
-            if (sceneNodes.TryGetValue(report.nodeId, out RescueNode sceneNode))
-            {
-                sceneNode.difficulty = report.newDifficulty;
-            }
-
-            if (!string.IsNullOrWhiteSpace(report.message))
-            {
-                messages.Add(report.message);
-                releasedRouteReports.Add(report.message);
-            }
-        }
-
-        return messages;
-    }
-
-    private bool ValidateScenario()
-    {
-        bool valid = true;
-        Dictionary<string, RescueNodeDefinition> definitions =
-            new Dictionary<string, RescueNodeDefinition>();
-
-        if (scenario.totalDays < 1)
-        {
-            Debug.LogError("Scenario must contain at least one day.");
-            valid = false;
-        }
-
-        if (scenario.dailyDeploymentCap < 1 || scenario.maxExpeditionsPerDay < 1)
-        {
-            Debug.LogError("Scenario must allow at least one logistics point and one expedition per day.");
-            valid = false;
-        }
-
-        foreach (RescueNodeDefinition definition in scenario.nodes)
-        {
-            if (string.IsNullOrWhiteSpace(definition.nodeId))
-            {
-                Debug.LogError("Scenario contains a node with no ID.");
-                valid = false;
-                continue;
-            }
-
-            if (!definitions.TryAdd(definition.nodeId, definition))
-            {
-                Debug.LogError("Duplicate scenario node ID: " + definition.nodeId);
-                valid = false;
-            }
-
-            if (
-                definition.difficulty < 0 ||
-                definition.survivorCount < 0 ||
-                definition.logisticsReward < 0
-            )
-            {
-                Debug.LogError("Node " + definition.nodeId + " contains a negative value.");
-                valid = false;
-            }
-        }
-
-        if (!definitions.ContainsKey("Camp"))
-        {
-            Debug.LogError("Scenario must contain the Camp node.");
-            return false;
-        }
-
-        foreach (RescueNodeDefinition definition in scenario.nodes)
-        {
-            if (definition.nodeId == "Camp")
-            {
-                continue;
-            }
-
-            if (!definitions.TryGetValue(definition.parentNodeId, out RescueNodeDefinition parent))
-            {
-                Debug.LogError(
-                    "Node " + definition.nodeId +
-                    " has missing parent " + definition.parentNodeId + "."
-                );
-                valid = false;
-                continue;
-            }
-
-            if (definition.depth != parent.depth + 1)
-            {
-                Debug.LogError("Node " + definition.nodeId + " has an invalid depth.");
-                valid = false;
-            }
-
-            if (definition.difficulty < parent.difficulty)
-            {
-                Debug.LogError(
-                    "Difficulty decreases from " +
-                    parent.nodeId +
-                    " to " +
-                    definition.nodeId + "."
-                );
-                valid = false;
-            }
-
-            HashSet<string> visited = new HashSet<string>();
-            RescueNodeDefinition current = definition;
-
-            while (current != null && current.nodeId != "Camp")
-            {
-                if (!visited.Add(current.nodeId))
-                {
-                    Debug.LogError("Scenario contains a parent cycle at " + current.nodeId + ".");
-                    valid = false;
-                    break;
-                }
-
-                definitions.TryGetValue(current.parentNodeId, out current);
-            }
-        }
-
-        return valid;
-    }
-
-    private int CountNodeAndChildren(string nodeId)
-    {
-        RescueNodeDefinition definition =
-            scenario.nodes.Find(node => node.nodeId == nodeId);
-
-        if (definition == null)
-        {
-            return 0;
-        }
-
-        int total = definition.survivorCount;
-
-        foreach (RescueNodeDefinition possibleChild in scenario.nodes)
-        {
-            if (possibleChild.parentNodeId == nodeId)
-            {
-                total += CountNodeAndChildren(possibleChild.nodeId);
-            }
-        }
-
-        return total;
-    }
+    public void AcknowledgeBranchReports() => Simulation.AcknowledgeBranchReports();
 }

@@ -17,6 +17,34 @@ MonoBehaviour:
   totalLogisticsPoints: 9
   dailyDeploymentCap: 4
   maxExpeditionsPerDay: 2
+  briefing: Early aerial counts give rough estimates for the four search branches. A storage cache at Creek Shelter supplies one extra logistics point on the following day.
+  branches:
+  - branchName: West Fork
+    rootNodeId: West Fork
+    reportedSurvivors: 3
+    note:
+  - branchName: North Pass
+    rootNodeId: North Pass
+    reportedSurvivors: 5
+    note:
+  - branchName: Lake Fork
+    rootNodeId: Lake Fork
+    reportedSurvivors: 3
+    note:
+  - branchName: South Spur
+    rootNodeId: South Spur
+    reportedSurvivors: 1
+    note:
+  intelligenceReports:
+  - afterDay: 1
+    nodeId:
+    newDifficulty: 0
+    revisedEstimates:
+    - rootNodeId: North Pass
+      reportedSurvivors: 1
+    - rootNodeId: South Spur
+      reportedSurvivors: 4
+    message: 'Second-pass aerial sweep: the North Pass count included a packing crew that had already evacuated. The South Spur count missed a group holding near Ridge Cache.'
   nodes:
   - nodeId: Camp
     parentNodeId: 
@@ -32,17 +60,18 @@ MonoBehaviour:
     parentNodeId: West Fork
     depth: 2
     difficulty: 2
-    survivorCount: 1
+    survivorCount: 0
   - nodeId: Fire Lookout
     parentNodeId: Fallen Timber Trail
     depth: 3
     difficulty: 3
-    survivorCount: 1
+    survivorCount: 3
   - nodeId: Creek Shelter
     parentNodeId: West Fork
     depth: 2
     difficulty: 2
     survivorCount: 1
+    logisticsReward: 1
   - nodeId: North Pass
     parentNodeId: Camp
     depth: 1
@@ -82,9 +111,34 @@ MonoBehaviour:
     parentNodeId: Flooded Causeway
     depth: 3
     difficulty: 2
-    survivorCount: 1
+    survivorCount: 2
   - nodeId: Weather Station
     parentNodeId: Flooded Causeway
     depth: 3
     difficulty: 3
     survivorCount: 1
+  - nodeId: South Spur
+    parentNodeId: Camp
+    depth: 1
+    difficulty: 1
+    survivorCount: 1
+  - nodeId: Timber Cut
+    parentNodeId: South Spur
+    depth: 2
+    difficulty: 2
+    survivorCount: 1
+  - nodeId: Gravel Pit
+    parentNodeId: Timber Cut
+    depth: 3
+    difficulty: 3
+    survivorCount: 2
+  - nodeId: Slide Zone
+    parentNodeId: Timber Cut
+    depth: 3
+    difficulty: 3
+    survivorCount: 0
+  - nodeId: Ridge Cache
+    parentNodeId: Slide Zone
+    depth: 4
+    difficulty: 4
+    survivorCount: 3
