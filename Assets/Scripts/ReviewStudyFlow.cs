@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CLSR.Simulation;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,7 +10,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 {
     private enum Phase { Setup, Practice, PracticeResult, Observe, Handoff, Initial, Discuss,
         WaitForSupport, Intervention, Reconsider, FinalPlan, PreOutcome, Result, PostOutcome, Reasoning,
-        ScenarioResult, Complete }
+        ScenarioResult, Complete, BranchReport }
 
     private const string PracticeScene = "PrototypeMap";
     private const float MapDragThreshold = 6f;
@@ -33,11 +34,23 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         public int ScenarioIndex = -1;
         public string[] Order;
         public readonly List<string> Scores = new();
+        public double StartedAt;
+        public bool WriteLog;
+        public ResearchLog Log;
     }
 
     public static bool IsActive => active != null;
     public static float PanelWidth => Mathf.Min(880f, Screen.width * .52f);
-    public static RescueNode HoveredNode => active != null ? active.hoveredNode : null;
+    public static bool TryGetLiteMapRect(out Rect rect)
+    {
+        if (active != null && active.UsesLiteBoard)
+        {
+            rect = active.LiteMapRect;
+            return true;
+        }
+        rect = default;
+        return false;
+    }
     private static Rect ZoomControlsRect =>
         new Rect(Screen.width - ZoomBarWidth - ZoomBarMargin,
             Screen.height - ZoomButtonSize - ZoomBarMargin, ZoomBarWidth, ZoomButtonSize);
@@ -47,6 +60,8 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
     private static bool IsPointerOverMap(Vector2 pointer)
     {
+        if (TryGetLiteMapRect(out Rect liteRect))
+            return liteRect.Contains(pointer) && (active == null || !active.IsPointerOverTacticalHud(pointer));
         return pointer.x > PanelWidth && pointer.x < Screen.width &&
             pointer.y >= 0f && pointer.y < Screen.height &&
             !ZoomControlsRect.Contains(pointer);
@@ -55,12 +70,13 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     private RescueGameController game;
     private ScenarioController scenario;
     private GraphCameraFraming mapCamera;
-    private RescueNode pressedNode, hoveredNode;
+    private RescueNode pressedNode;
     private Vector2 mapPressPosition, lastDragPosition;
     private bool mapPointerHeld, mapDragging;
     private Phase phase, form;
     private int player, chosenCondition;
-    private bool skipTimers, showDestinations, useMockBackend;
+    private bool skipTimers, showDestinations, useMockBackend, writeLog;
+    private string writtenLogPath;
     private Vector2 scroll;
     private GUIStyle labelStyle, headingStyle, statusStyle, noticeStyle;
     private GUIStyle buttonStyle, toggleStyle, textAreaStyle;
@@ -91,20 +107,36 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
     private void Awake()
     {
-        active = this;
         DesignerView.TruthVisible = false;
         game = GetComponent<RescueGameController>();
         scenario = GetComponent<ScenarioController>();
         phase = session == null ? Phase.Setup :
             session.ScenarioIndex < 0 ? Phase.Practice : Phase.Observe;
+        if (game != null) game.DayResolved += LogDayResolved;
     }
 
-    private void Update()
+    private void Start()
     {
-        Vector2 pointer = Input.mousePosition;
-        pointer.y = Screen.height - pointer.y;
-        hoveredNode = Application.isFocused && !mapDragging && IsPointerOverMap(pointer)
-            ? GetNodeAt(pointer) : null;
+        if (session != null && scenario != null && scenario.IsReady)
+        {
+            LogSceneStart();
+            LogEvent("phase", "from", "", "to", phase.ToString(), "day", game.CurrentDay,
+                "scenario", ScenarioLabel(scenario));
+        }
+    }
+
+    private void OnEnable()
+    {
+        active = this;
+        // Wheel zoom only applies over the map itself, never over HUD panels or forms.
+        GraphCameraFraming.AllowWheelZoomAt = pointer => active == this && IsPointerOverMap(pointer);
+    }
+
+    private void OnDisable()
+    {
+        if (active != this) return;
+        active = null;
+        GraphCameraFraming.AllowWheelZoomAt = null;
     }
 
     private void HandleMapPointer()
@@ -134,7 +166,10 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 MoveMapPointer(pointer);
                 if (!mapDragging && CanSelectMapNode && pressedNode != null &&
                     IsPointerOverMap(pointer) && GetNodeAt(pointer) == pressedNode)
-                    NodeSelectionManager.Instance?.SelectNode(pressedNode);
+                {
+                    if (IsLitePlanning) OpenLiteDraft(pressedNode);
+                    else NodeSelectionManager.Instance?.SelectNode(pressedNode);
+                }
                 GUIUtility.hotControl = 0;
                 ClearMapGesture();
                 input.Use();
@@ -155,11 +190,9 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
     private void OnApplicationFocus(bool hasFocus)
     {
-        if (!hasFocus)
-        {
-            hoveredNode = null;
-            ClearMapGesture();
-        }
+        if (hasFocus) return;
+        ClearMapGesture();
+        frostPopupPointer = null;
     }
 
     private void ClearMapGesture()
@@ -187,7 +220,14 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
             return;
 
         EnsureTextStyles();
+        TrackFrostPopupPointer(Event.current);
         HandleMapPointer();
+
+        if (UsesLiteBoard)
+        {
+            DrawLiteBoard();
+            return;
+        }
 
         Color previous = GUI.color;
         GUI.color = new Color(.72f, .71f, .55f);
@@ -216,6 +256,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         GUILayout.EndArea();
         DrawMapZoom();
         GUI.backgroundColor = Color.white;
+        DrawFrostNodePopup();
     }
 
     private GraphCameraFraming GetMapCamera()
@@ -254,21 +295,28 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
             return;
 
         labelStyle = new GUIStyle(GUI.skin.label) {
-            fontSize = 38, wordWrap = true, normal = { textColor = Color.black } };
-        headingStyle = new GUIStyle(labelStyle) { fontSize = 50, fontStyle = FontStyle.Bold };
-        statusStyle = new GUIStyle(labelStyle) { fontSize = 42, fontStyle = FontStyle.Bold };
+            font = StudyFont, fontStyle = FontStyle.Normal, fontSize = 38, wordWrap = true,
+            normal = { textColor = Color.black } };
+        headingStyle = new GUIStyle(labelStyle) { fontSize = 50 };
+        statusStyle = new GUIStyle(labelStyle) { fontSize = 42 };
         noticeStyle = new GUIStyle(labelStyle) { fontSize = 28 };
         buttonStyle = new GUIStyle(GUI.skin.button) {
-            fontSize = 36, wordWrap = true, fixedHeight = 0, padding = new RectOffset(12, 12, 9, 9)
+            font = StudyFont, fontStyle = FontStyle.Normal, fontSize = 36, wordWrap = true,
+            fixedHeight = 0, padding = new RectOffset(12, 12, 9, 9)
         };
+        buttonStyle.hover.textColor = buttonStyle.normal.textColor;
+        buttonStyle.onHover.textColor = buttonStyle.onNormal.textColor;
         toggleStyle = new GUIStyle(GUI.skin.toggle) {
-            fontSize = 36, wordWrap = true, fixedHeight = 0, normal = { textColor = Color.black },
+            font = StudyFont, fontStyle = FontStyle.Normal, fontSize = 36, wordWrap = true,
+            fixedHeight = 0, normal = { textColor = Color.black },
             onNormal = { textColor = Color.black }, hover = { textColor = Color.black },
             onHover = { textColor = Color.black }, active = { textColor = Color.black },
             onActive = { textColor = Color.black }, focused = { textColor = Color.black },
             onFocused = { textColor = Color.black }
         };
-        textAreaStyle = new GUIStyle(GUI.skin.textArea) { fontSize = 38, wordWrap = true };
+        textAreaStyle = new GUIStyle(GUI.skin.textArea) {
+            font = StudyFont, fontStyle = FontStyle.Normal, fontSize = 38, wordWrap = true };
+        textAreaStyle.hover.textColor = textAreaStyle.normal.textColor;
     }
 
     private void DrawPhase()
@@ -288,27 +336,30 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 if (localBackendAvailable)
                     useMockBackend = GUILayout.Toggle(useMockBackend, "Use local mock backend", toggleStyle,
                         GUILayout.MinHeight(PanelButtonHeight));
+                if (LocalLogAvailable)
+                    writeLog = GUILayout.Toggle(writeLog, "Write local event log (no answers or names)", toggleStyle,
+                        GUILayout.MinHeight(PanelButtonHeight));
                 if (Button("Start practice"))
                 {
                     session = new Session {
                         Condition = chosenCondition == 0 ? UnityEngine.Random.Range(1, 4) : chosenCondition,
                         SkipTimers = skipTimers, UseMockBackend = localBackendAvailable && useMockBackend,
-                        Order = (string[])MapScenes.Clone()
+                        Order = (string[])MapScenes.Clone(),
+                        StartedAt = Time.realtimeSinceStartupAsDouble,
+                        WriteLog = LocalLogAvailable && writeLog,
+                        Log = new ResearchLog("clsr-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" +
+                            Guid.NewGuid().ToString("N").Substring(0, 6))
                     };
                     if (UnityEngine.Random.Range(0, 2) == 1) Array.Reverse(session.Order);
+                    writtenLogPath = null;
+                    LogEvent("session_start", "condition", StudyProtocol.ConditionCode(session.Condition),
+                        "condition_source", chosenCondition == 0 ? "random" : "reviewer_selected",
+                        "scenario_order", string.Join(",", session.Order), "timers_skipped", session.SkipTimers,
+                        "support_source", session.Condition == 1 ? "none" :
+                            session.UseMockBackend ? "local_mock_backend" : "offline_sample",
+                        "build", Application.version, "platform", Application.platform.ToString());
                     Load(PracticeScene, Phase.Practice);
                 }
-                break;
-            case Phase.Practice:
-                Heading("Practice dispatch");
-                Label("Pick a destination and assign logistics points (LP). A trip follows one path from base camp. A site’s DIFF is a minimum team size, not an additional toll. Reached sites are searched along the way. A blocked trip reveals the threshold at its stopping point.");
-                DrawPlan();
-                if (Button("Run practice dispatch") && Deploy()) Go(Phase.PracticeResult);
-                break;
-            case Phase.PracticeResult:
-                Heading("Practice result");
-                Label(Summary());
-                if (Button("Start the first scenario")) NextScenario();
                 break;
             case Phase.Observe:
                 Heading("1. Observe the map");
@@ -342,17 +393,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 {
                     initialResponses.Add(new InitialResponse(Value("branch"), Value("reason"), CopyPlan()));
                     draft.Clear();
-                    if (!NextPlayer()) Timed(Phase.Discuss, 60);
-                }
-                break;
-            case Phase.Discuss:
-                Heading("3. Initial discussion");
-                Label("Discuss what each option could accomplish. Record one provisional plan. This does not dispatch any expeditions.");
-                DrawPlan();
-                if (TimedButton("Lock provisional plan"))
-                {
-                    provisional = CopyPlan();
-                    StartIntervention();
+                    if (!NextPlayer()) Timed(Phase.Discuss, StudyProtocol.InitialDiscussionSeconds);
                 }
                 break;
             case Phase.WaitForSupport:
@@ -363,23 +404,10 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 Heading("4. Decision pause");
                 Label(interventionLabel);
                 Label(message);
-                if (TimedButton("Continue to further discussion")) Timed(Phase.Reconsider, 45);
-                break;
-            case Phase.Reconsider:
-                Heading("5. Further discussion");
-                Label(message);
-                Label("Keep or revise the provisional plan. A message never changes the plan or launches a dispatch for you.");
-                DrawPlan();
-                if (TimedButton("Continue to final plan")) Go(Phase.FinalPlan);
-                break;
-            case Phase.FinalPlan:
-                Heading("6. Final team plan");
-                Label("Provisional: " + Describe(provisional));
-                DrawPlan();
-                if (Button("Lock final plan and open private ratings"))
+                if (TimedButton("Continue to further discussion"))
                 {
-                    finalPlan = CopyPlan();
-                    BeginForms(Phase.PreOutcome);
+                    LogInterventionClosed();
+                    Timed(Phase.Reconsider, StudyProtocol.FurtherDiscussionSeconds);
                 }
                 break;
             case Phase.PreOutcome:
@@ -394,20 +422,26 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                     else Go(Phase.FinalPlan, false);
                 }
                 break;
-            case Phase.Result:
-                Heading("7. Dispatch outcome");
-                Label(Summary());
-                Label(DiscoveredFrontier());
-                Status($"Total rescued: {game.TotalRescued}/{game.TotalSurvivors}");
-                if (Button("Open private post-outcome forms")) BeginForms(Phase.PostOutcome);
-                break;
             case Phase.PostOutcome:
                 Heading($"Player {player + 1}: After the outcome");
                 DrawPostOutcome();
                 if (Button("Finish individual evaluation") && !NextPlayer())
                 {
                     if (game.GameOver) BeginForms(Phase.Reasoning);
-                    else Go(Phase.Observe);
+                    else Go(scenario.HasPendingBranchReports ? Phase.BranchReport : Phase.Observe);
+                }
+                break;
+            case Phase.BranchReport:
+                Heading("New intelligence report");
+                foreach (string report in scenario.PendingBranchReportMessages())
+                    Label(report);
+                Label("These are revised estimates. Use the updated board when planning the next dispatch.");
+                if (Button("Acknowledge and update the board"))
+                {
+                    LogEvent("branch_report_acknowledged", "day", game.CurrentDay,
+                        "reports", string.Join(" | ", scenario.PendingBranchReportMessages()));
+                    scenario.AcknowledgeBranchReports();
+                    Go(Phase.Observe);
                 }
                 break;
             case Phase.Reasoning:
@@ -417,6 +451,9 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 if (Button("Finish scenario reasoning") && !NextPlayer())
                 {
                     session.Scores.Add($"{scenario.CurrentScenario.scenarioName}: {game.TotalRescued}/{game.TotalSurvivors}");
+                    LogEvent("scenario_complete", "scenario", ScenarioLabel(scenario),
+                        "scenario_index", session.ScenarioIndex, "rescued", game.TotalRescued,
+                        "total_survivors", game.TotalSurvivors);
                     Go(Phase.ScenarioResult);
                 }
                 break;
@@ -432,7 +469,14 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
             case Phase.Complete:
                 Heading("Walkthrough complete");
                 foreach (string score in session.Scores) Status(score);
+                if (session.WriteLog && writtenLogPath == null)
+                {
+                    LogEvent("session_complete");
+                    writtenLogPath = WriteEventLog() ?? "";
+                }
                 Label("No responses were saved. Mock requests, if enabled, stayed on this computer.");
+                if (!string.IsNullOrEmpty(writtenLogPath))
+                    Label("Event log (phases, timing, plans, outcomes and displayed messages; no answers): " + writtenLogPath);
                 if (Button("Return to setup"))
                 {
                     session = null;
@@ -466,7 +510,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         }
         if (id != null)
         {
-            Label(PublicNode(id));
+            Label(PublicNodeText(id));
             var trip = draft.Find(item => item.targetNodeId == id);
             GUILayout.BeginHorizontal();
             if (Button("- Point") && trip != null && --trip.assignedGroups == 0) draft.Remove(trip);
@@ -498,6 +542,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         }
         game.ConfirmPlan();
         draft.Clear();
+        liteRouteSlots.Clear();
         return true;
     }
 
@@ -535,6 +580,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
     private bool NextPlayer()
     {
+        LogFormComplete();
         ResetForm();
         if (++player >= 3) return false;
         Go(Phase.Handoff);
@@ -549,8 +595,11 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
     private void Go(Phase next, bool clearError = true)
     {
+        CloseLiteDraft();
+        LogPhaseChange(phase, next);
         phase = next;
         scroll = Vector2.zero;
+        liteNoteScroll = Vector2.zero;
         showDestinations = false;
         openChoice = null;
         if (clearError) error = null;
@@ -571,33 +620,30 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         return false;
     }
 
-    private string PublicNode(string id)
+    private string PublicNodeText(string id)
     {
-        var node = scenario.GetDefinition(id);
-        string diff = scenario.IsDifficultyKnown(id) ? node.difficulty.ToString() : "?";
-        bool known = scenario.AreSurvivorCountsKnown(id);
-        string here = known ? scenario.CountRemainingHere(id).ToString() : "?";
-        string beyond = known ? scenario.CountRemainingBeyond(id).ToString() : "?";
-        var childReports = scenario.CurrentScenario.nodes
-            .Where(n => n.parentNodeId == id)
-            .Select(n => scenario.TryGetDiscoveredBranchCount(n.nodeId, out int count)
-                ? $"{n.nodeId}: {count}" : null)
-            .Where(report => report != null).ToArray();
-        string branchText = scenario.TryGetDiscoveredBranchCount(id, out int branchCount)
-            ? $"\nRemaining in this branch: {branchCount}" : "";
-        if (childReports.Length > 0)
+        var view = scenario.View();
+        var node = view.Get(id);
+        if (node == null) return "";
+        string Show(int? value) => value.HasValue ? value.Value.ToString() : "?";
+        var childReports = view.ChildrenOf(id)
+            .Where(child => child.KnownBranchRemaining.HasValue)
+            .Select(child => $"{child.Id}: {child.KnownBranchRemaining}").ToArray();
+        string branchText = node.KnownBranchRemaining.HasValue && node.ParentId != ScenarioSpec.CampId
+            ? $"\nRemaining in this branch: {node.KnownBranchRemaining}" : "";
+        if (node.KnownRemainingHere.HasValue && childReports.Length > 0)
             branchText += "\nRemaining by next branch: " + string.Join(" | ", childReports);
-        return $"HERE {here} | BEYOND {beyond} | DIFF {diff}" + branchText +
-            (string.IsNullOrEmpty(node.playerNote) ? "" : "\n" + node.playerNote);
+        string note = scenario.GetDefinition(id)?.playerNote;
+        return $"HERE {Show(node.KnownRemainingHere)} | BEYOND {Show(node.KnownRemainingBeyond)} | DIFF {Show(node.KnownDifficulty)}" +
+            branchText + (string.IsNullOrEmpty(note) ? "" : "\n" + note);
     }
 
     private string DiscoveredFrontier()
     {
-        var reports = scenario.CurrentScenario.nodes
-            .Where(n => !scenario.AreSurvivorCountsKnown(n.nodeId))
-            .Select(n => scenario.TryGetDiscoveredBranchCount(n.nodeId, out int count)
-                ? $"{n.nodeId}: {count}" : null)
-            .Where(report => report != null).ToArray();
+        var reports = scenario.View().Nodes
+            .Where(n => !n.KnownRemainingHere.HasValue && n.KnownBranchRemaining.HasValue &&
+                n.ParentId != ScenarioSpec.CampId)
+            .Select(n => $"{n.Id}: {n.KnownBranchRemaining}").ToArray();
         return reports.Length == 0 ? "" :
             "Remaining survivors by discovered branch: " + string.Join(" | ", reports);
     }
@@ -612,10 +658,13 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         var map = scenario.CurrentScenario;
         if (map.branches.Count != 0)
             return string.Join("\n", map.branches.Select(report =>
-                $"{report.branchName}: {report.reportedSurvivors} initially reported. {report.note}"));
+                $"{report.branchName}: {scenario.GetBranchEstimate(report)} " +
+                (scenario.HasRevisedBranchEstimate(report) ? "revised estimate. " : "initial estimate. ") + report.note));
 
-        return string.Join("\n", map.nodes.Where(node => node.parentNodeId == "Camp").Select(node =>
-            $"{node.nodeId}: {scenario.CountRemainingBranchSurvivors(node.nodeId)} remaining in branch."));
+        // Maps without reports publish exact first-level totals (the practice map).
+        return string.Join("\n", scenario.View().ChildrenOf(ScenarioSpec.CampId)
+            .Where(node => node.KnownBranchRemaining.HasValue)
+            .Select(node => $"{node.Id}: {node.KnownBranchRemaining} remaining in branch."));
     }
 
     private string Summary() => game.LastDaySummary.Replace("<b>", "").Replace("</b>", "");

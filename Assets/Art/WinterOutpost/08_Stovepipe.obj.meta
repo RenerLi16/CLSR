@@ -1,0 +1,32 @@
+fileFormatVersion: 2
+guid: af8fd1841b2c54169ea2b14c77a8d29b
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Snow
+    second: {fileID: 2100000, guid: c4518ea6de3f55ceaf22a224d4d11bd6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Iron
+    second: {fileID: 2100000, guid: a095484b464f58808037427d22c5d59c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BlackIron
+    second: {fileID: 2100000, guid: be5963d0b2e75c67962656f93ae7b13a, type: 2}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 2
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    useFileScale: 0
+  tangentSpace:
+    normalImportMode: 0
+    tangentImportMode: 3

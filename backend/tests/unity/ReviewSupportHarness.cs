@@ -35,7 +35,7 @@ public static class ReviewSupportHarness
 
             var judgments = new[] {
                 new ReviewSupportSnapshot.Judgment { Branch = "W1", Reason = "access", Plan = Plan("W2", 2) },
-                new ReviewSupportSnapshot.Judgment { Branch = "N1", Reason = "branch_count", Plan = Plan("N3", 4) },
+                new ReviewSupportSnapshot.Judgment { Branch = "N1", Reason = "branch_count", Plan = Plan("N3", 3) },
                 new ReviewSupportSnapshot.Judgment { Plan = Array.Empty<ExpeditionAssignment>() }
             };
             var caches = UnityEngine.Object.FindObjectsByType<StorageCampMarker>(FindObjectsSortMode.None)
@@ -45,12 +45,24 @@ public static class ReviewSupportHarness
             Emit("day1", day1);
             Check(game.TrySetPlan(Plan("W2", 1)), "blocked test plan accepted");
             game.ConfirmPlan();
+            var river = scenario.CurrentScenario.branches.Single(branch => branch.rootNodeId == "R1");
+            var cliff = scenario.CurrentScenario.branches.Single(branch => branch.rootNodeId == "C1");
+            Check(scenario.HasPendingBranchReports, "Cedar correction queued after Day 1");
+            Check(!game.TrySetPlan(Plan("W2", 2)), "cannot dispatch before acknowledging the report");
+            Check(scenario.GetBranchEstimate(river) == 5 && scenario.GetBranchEstimate(cliff) == 1,
+                "old estimates visible before acknowledgment");
+            Emit("pending", ReviewSupportSnapshot.Build(Direct, scenario, game, empty, judgments, caches));
+            scenario.AcknowledgeBranchReports();
+            Check(scenario.GetBranchEstimate(river) == 1 && scenario.GetBranchEstimate(cliff) == 4,
+                "board reflects the correction after acknowledgment");
             Emit("day2", ReviewSupportSnapshot.Build(Direct, scenario, game, empty, judgments, caches));
             Check(game.TrySetPlan(Plan("W2", 2)), "cache test plan accepted");
             game.ConfirmPlan();
             dissentPayload = ReviewSupportSnapshot.Build(Dissent, scenario, game, empty, judgments, caches);
             Emit("day3", dissentPayload);
             game.RestartGame();
+            Check(scenario.GetBranchEstimate(river) == 5 && scenario.GetBranchEstimate(cliff) == 1,
+                "restart restores initial estimates");
             Emit("reset", ReviewSupportSnapshot.Build(Direct, scenario, game, empty, judgments, caches));
 
             flow = game.gameObject.AddComponent<ReviewStudyFlow>();

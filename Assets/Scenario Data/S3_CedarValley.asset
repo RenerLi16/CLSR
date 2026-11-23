@@ -17,11 +17,11 @@ MonoBehaviour:
   totalLogisticsPoints: 9
   dailyDeploymentCap: 4
   maxExpeditionsPerDay: 2
-  briefing: Storage camps pay out the day after a team passes them. A Day-2 report may change one high route before Day 3.
+  briefing: The aerial counts are rough estimates. Storage camps pay out the day after a team passes them.
   branches:
   - branchName: North Ridge
     rootNodeId: N1
-    reportedSurvivors: 1
+    reportedSurvivors: 2
     note: "Storage +3 \xb7 access estimate 3\u20134"
   - branchName: West Woods
     rootNodeId: W1
@@ -33,13 +33,18 @@ MonoBehaviour:
     note: "No storage \xb7 access estimate 2\u20134"
   - branchName: Cliff Pass
     rootNodeId: C1
-    reportedSurvivors: 3
+    reportedSurvivors: 1
     note: "No storage \xb7 access estimate 1\u20133"
   intelligenceReports:
-  - afterDay: 2
-    nodeId: C3
-    newDifficulty: 2
-    message: Rockfall on the upper Cliff Pass route has been cleared. Reaching C3 now takes one fewer logistics point.
+  - afterDay: 1
+    nodeId:
+    newDifficulty: 0
+    revisedEstimates:
+    - rootNodeId: R1
+      reportedSurvivors: 1
+    - rootNodeId: C1
+      reportedSurvivors: 4
+    message: 'A field check found that the first aerial sweep counted the same River Road spur twice. A second sweep above Cliff Pass spotted a group the first sweep missed.'
   nodes:
   - nodeId: Camp
     parentNodeId: 
@@ -53,7 +58,7 @@ MonoBehaviour:
     difficulty: 1
     survivorCount: 0
     logisticsReward: 0
-    playerNote: "Frontier node. Exact difficulty unknown; the North Ridge report says 1 survivor in the whole branch."
+    playerNote: "North Ridge entry. Check the branch board for the latest estimate."
     truthNote: "DIFF 1 \xb7 HERE 0 \xb7 North Ridge entry."
   - nodeId: N2
     parentNodeId: N1
@@ -62,23 +67,23 @@ MonoBehaviour:
     survivorCount: 1
     logisticsReward: 0
     playerNote: "Unexplored. It lies on the only route to the +3 storage camp."
-    truthNote: "DIFF 3 \xb7 HERE 1. Reaching this node rescues the branch's only survivor."
+    truthNote: "DIFF 3 \xb7 HERE 1. The trail splits toward N3 and N4."
   - nodeId: N3
     parentNodeId: N2
     depth: 3
-    difficulty: 4
+    difficulty: 3
     survivorCount: 0
     logisticsReward: 3
     playerNote: "Storage camp location. The reward is known, but the final access difficulty is not."
-    truthNote: "DIFF 4 \xb7 HERE 0 \xb7 Unlocks +3 logistics points starting the following day."
+    truthNote: "DIFF 3 \xb7 HERE 0 \xb7 Unlocks +3 logistics points starting the following day."
   - nodeId: N4
     parentNodeId: N2
     depth: 3
-    difficulty: 4
-    survivorCount: 0
+    difficulty: 3
+    survivorCount: 1
     logisticsReward: 0
     playerNote: "Optional side path. No initial report distinguishes it from the storage camp route."
-    truthNote: "DIFF 4 \xb7 HERE 0 \xb7 Deliberate low-value side destination."
+    truthNote: "DIFF 3 \xb7 HERE 1."
   - nodeId: W1
     parentNodeId: Camp
     depth: 1
@@ -107,17 +112,17 @@ MonoBehaviour:
     parentNodeId: W2
     depth: 3
     difficulty: 3
-    survivorCount: 0
+    survivorCount: 1
     logisticsReward: 0
     playerNote: "Unexplored side trail; choosing it sacrifices progress toward the deep West Woods destination."
-    truthNote: "DIFF 3 \xb7 HERE 0."
+    truthNote: "DIFF 3 \xb7 HERE 1."
   - nodeId: R1
     parentNodeId: Camp
     depth: 1
     difficulty: 1
     survivorCount: 1
     logisticsReward: 0
-    playerNote: "Frontier node. River Road has the strongest survivor report: 5."
+    playerNote: "River Road entry. Check the branch board for the latest estimate."
     truthNote: "DIFF 1 \xb7 HERE 1."
   - nodeId: R2
     parentNodeId: R1
@@ -125,24 +130,24 @@ MonoBehaviour:
     difficulty: 2
     survivorCount: 1
     logisticsReward: 0
-    playerNote: "The route splits here. The large report does not say which fork contains survivors."
+    playerNote: "The route splits here. The branch estimate covers both forks."
     truthNote: "DIFF 2 \xb7 HERE 1."
   - nodeId: R3
     parentNodeId: R2
     depth: 3
     difficulty: 3
-    survivorCount: 0
+    survivorCount: 1
     logisticsReward: 0
     playerNote: "Unexplored western river fork."
-    truthNote: "DIFF 3 \xb7 HERE 0."
+    truthNote: "DIFF 3 \xb7 HERE 1."
   - nodeId: R4
     parentNodeId: R2
     depth: 3
     difficulty: 3
-    survivorCount: 1
+    survivorCount: 0
     logisticsReward: 0
     playerNote: "Unexplored eastern river fork."
-    truthNote: "DIFF 3 \xb7 HERE 1."
+    truthNote: "DIFF 3 \xb7 HERE 0."
   - nodeId: R5
     parentNodeId: R4
     depth: 4
@@ -157,7 +162,7 @@ MonoBehaviour:
     difficulty: 1
     survivorCount: 0
     logisticsReward: 0
-    playerNote: "Frontier node. The Cliff Pass report says 3 survivors."
+    playerNote: "Cliff Pass entry. Check the branch board for the latest estimate."
     truthNote: "DIFF 1 \xb7 HERE 0."
   - nodeId: C2
     parentNodeId: C1
@@ -165,13 +170,13 @@ MonoBehaviour:
     difficulty: 2
     survivorCount: 1
     logisticsReward: 0
-    playerNote: "This exposed route may be affected by the Day-2 report."
+    playerNote: "An exposed section of the trail leading to upper Cliff Pass."
     truthNote: "DIFF 2 \xb7 HERE 1."
   - nodeId: C3
     parentNodeId: C2
     depth: 3
     difficulty: 3
-    survivorCount: 1
+    survivorCount: 4
     logisticsReward: 0
     playerNote: "Upper Cliff Pass destination. Its exact access cost is unknown."
-    truthNote: "DIFF 3 \xb7 HERE 1 \xb7 The Day-2 report reduces its difficulty to 2 on Day 3."
+    truthNote: "DIFF 3 \xb7 HERE 4."

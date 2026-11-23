@@ -1,0 +1,37 @@
+fileFormatVersion: 2
+guid: fa0eda61ed0556b9a68c298c55e0b803
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PackedSnow
+    second: {fileID: 2100000, guid: 5604c1c304d7513987d138d695aeba37, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: OldTimber
+    second: {fileID: 2100000, guid: 0c466a4d35ec59bfba154c078342fab1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LightTimber
+    second: {fileID: 2100000, guid: 562c01db3dd25022ab56397118388ad4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DarkTimber
+    second: {fileID: 2100000, guid: 1b87b77a5b15537a9c2ae6b6b5147871, type: 2}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 2
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    useFileScale: 0
+  tangentSpace:
+    normalImportMode: 0
+    tangentImportMode: 3

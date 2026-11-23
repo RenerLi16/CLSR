@@ -1,0 +1,52 @@
+fileFormatVersion: 2
+guid: 6521cdbcf8d45667bfa1b0ca5a59924d
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Snow
+    second: {fileID: 2100000, guid: c4518ea6de3f55ceaf22a224d4d11bd6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PackedSnow
+    second: {fileID: 2100000, guid: 5604c1c304d7513987d138d695aeba37, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Iron
+    second: {fileID: 2100000, guid: a095484b464f58808037427d22c5d59c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BlackIron
+    second: {fileID: 2100000, guid: be5963d0b2e75c67962656f93ae7b13a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Canvas
+    second: {fileID: 2100000, guid: 3045898d4a1d5142947e5cccebbefc3a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CanvasSeam
+    second: {fileID: 2100000, guid: b50c5b3a6af05f689f4cdcd7a6ca1938, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Hemp
+    second: {fileID: 2100000, guid: 6cb55c0f461c547e843663915f40232e, type: 2}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 2
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    useFileScale: 0
+  tangentSpace:
+    normalImportMode: 0
+    tangentImportMode: 3

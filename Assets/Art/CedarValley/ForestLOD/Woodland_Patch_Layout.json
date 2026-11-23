@@ -1,0 +1,19 @@
+{
+  "units": "meters",
+  "upAxis": "Y",
+  "pivot": "ground-level local origin",
+  "treePlacements": [
+    {"variant": "Ridge_Spruce", "x": -7.8, "z": -3.9, "scale": 0.87, "yawDegrees": 11},
+    {"variant": "Wind_Bent_Sapling", "x": -5.2, "z": -7.7, "scale": 0.89, "yawDegrees": 67},
+    {"variant": "Woodland_Pine", "x": -3.4, "z": -3.5, "scale": 1.17, "yawDegrees": 121},
+    {"variant": "Woodland_Pine", "x": -9.4, "z": 0.2, "scale": 0.86, "yawDegrees": 184},
+    {"variant": "Ridge_Spruce", "x": -6.0, "z": 2.1, "scale": 1.05, "yawDegrees": 93},
+    {"variant": "Wind_Bent_Sapling", "x": -2.1, "z": 0.3, "scale": 1.09, "yawDegrees": 210},
+    {"variant": "Woodland_Pine", "x": 2.4, "z": -1.6, "scale": 1.07, "yawDegrees": 138},
+    {"variant": "Ridge_Spruce", "x": 5.4, "z": -4.0, "scale": 0.76, "yawDegrees": 10},
+    {"variant": "Wind_Bent_Sapling", "x": 7.9, "z": -1.4, "scale": 0.97, "yawDegrees": 151},
+    {"variant": "Ridge_Spruce", "x": 4.6, "z": 2.9, "scale": 1.09, "yawDegrees": 313},
+    {"variant": "Woodland_Pine", "x": 8.2, "z": 2.9, "scale": 0.97, "yawDegrees": 267},
+    {"variant": "Wind_Bent_Sapling", "x": 0.2, "z": 5.0, "scale": 1.03, "yawDegrees": 26}
+  ]
+}

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// A small camera-facing text panel placed in the world (branch signs,
+/// A small camera-facing label placed in the world (branch signs,
 /// storage camp tags). Every active label is listed in <see cref="Active"/>
 /// so the camera framing can keep them on screen.
 /// </summary>
@@ -11,11 +11,13 @@ public class WorldLabel : MonoBehaviour
 {
     public const float PixelsToWorld = 0.0083f;
 
+    internal static float SceneScale => Camera.main is Camera camera &&
+        camera.TryGetComponent(out GraphCameraFraming framing) ? framing.WorldLabelScale : 1f;
+
     public static readonly List<WorldLabel> Active = new List<WorldLabel>();
 
     private RectTransform rect;
     private Text text;
-    private Image background;
 
     public RectTransform Rect => rect;
 
@@ -31,8 +33,7 @@ public class WorldLabel : MonoBehaviour
         Vector2 sizePixels,
         Vector2 pivot,
         int fontSize,
-        TextAnchor alignment,
-        bool showBackground
+        TextAnchor alignment
     )
     {
         GameObject labelObject = new GameObject(
@@ -46,7 +47,7 @@ public class WorldLabel : MonoBehaviour
         label.rect = labelObject.GetComponent<RectTransform>();
         label.rect.pivot = pivot;
         label.rect.sizeDelta = sizePixels;
-        label.rect.localScale = Vector3.one * PixelsToWorld;
+        label.rect.localScale = Vector3.one * (PixelsToWorld * SceneScale);
         label.rect.position = worldPosition;
 
         Canvas canvas = labelObject.GetComponent<Canvas>();
@@ -54,22 +55,14 @@ public class WorldLabel : MonoBehaviour
         canvas.overrideSorting = true;
         canvas.sortingOrder = 15;
 
-        GameObject backgroundObject = new GameObject("Background", typeof(RectTransform), typeof(Image));
-        backgroundObject.transform.SetParent(labelObject.transform, false);
-        Stretch(backgroundObject.GetComponent<RectTransform>(), Vector2.zero);
-        label.background = backgroundObject.GetComponent<Image>();
-        label.background.color = new Color(0.16f, 0.16f, 0.16f, 0.92f);
-        label.background.raycastTarget = false;
-        label.background.enabled = showBackground;
-
         GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(Text));
         textObject.transform.SetParent(labelObject.transform, false);
         Stretch(textObject.GetComponent<RectTransform>(), new Vector2(16f, 8f));
         label.text = textObject.GetComponent<Text>();
-        label.text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        label.text.font = ReviewStudyFlow.StudyFont;
         label.text.fontSize = fontSize;
         label.text.alignment = alignment;
-        label.text.color = Color.white;
+        label.text.color = FrostUiTheme.Enamel;
         label.text.supportRichText = true;
         label.text.horizontalOverflow = HorizontalWrapMode.Wrap;
         label.text.verticalOverflow = VerticalWrapMode.Truncate;
@@ -77,9 +70,17 @@ public class WorldLabel : MonoBehaviour
         label.text.resizeTextMinSize = 16;
         label.text.resizeTextMaxSize = fontSize;
         label.text.raycastTarget = false;
+        AddReadabilityOutline(label.text);
 
         label.FaceCamera();
         return label;
+    }
+
+    internal static void AddReadabilityOutline(Text label)
+    {
+        var outline = label.gameObject.AddComponent<Outline>();
+        outline.effectColor = FrostUiTheme.Coal;
+        outline.effectDistance = new Vector2(3f, -3f);
     }
 
     private static void Stretch(RectTransform child, Vector2 inset)

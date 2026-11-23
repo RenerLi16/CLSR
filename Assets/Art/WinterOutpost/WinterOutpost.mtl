@@ -1,0 +1,224 @@
+newmtl Snow
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/Snow.png
+
+newmtl PackedSnow
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/PackedSnow.png
+
+newmtl PineBark
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/PineBark.png
+
+newmtl EndGrain
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/EndGrain.png
+
+newmtl PineNeedles
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/PineNeedles.png
+
+newmtl DeepPine
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/DeepPine.png
+
+newmtl OldTimber
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/OldTimber.png
+
+newmtl LightTimber
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/LightTimber.png
+
+newmtl DarkTimber
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/DarkTimber.png
+
+newmtl Iron
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/Iron.png
+
+newmtl ColdSteel
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/ColdSteel.png
+
+newmtl BlackIron
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/BlackIron.png
+
+newmtl Rust
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/Rust.png
+
+newmtl OxideRed
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/OxideRed.png
+
+newmtl EnamelCream
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/EnamelCream.png
+
+newmtl Canvas
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/Canvas.png
+
+newmtl CanvasSeam
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/CanvasSeam.png
+
+newmtl Hemp
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/Hemp.png
+
+newmtl GlassAmber
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/GlassAmber.png
+
+newmtl GlassCold
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/GlassCold.png
+
+newmtl Slate
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/Slate.png
+
+newmtl DarkSlate
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/DarkSlate.png
+
+newmtl Quartz
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.03 0.03 0.03
+Ns 6
+d 1
+illum 2
+map_Kd Textures/Quartz.png
+
+newmtl RiverIce
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/RiverIce.png
+
+newmtl IceEdge
+Ka .22 .22 .22
+Kd 1 1 1
+Ks 0.18 0.18 0.18
+Ns 28
+d 1
+illum 2
+map_Kd Textures/IceEdge.png

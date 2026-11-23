@@ -6,6 +6,7 @@ public class CampLabel : MonoBehaviour
 {
     private GameObject labelObject;
     private RectTransform labelTransform;
+    private float labelScale;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void AttachOnSceneLoad()
@@ -39,7 +40,7 @@ public class CampLabel : MonoBehaviour
         }
 
         labelTransform.position =
-            transform.position - activeCamera.transform.up * 0.82f -
+            transform.position - activeCamera.transform.up * (0.82f * labelScale) -
             activeCamera.transform.forward * 1.25f;
         labelTransform.rotation = activeCamera.transform.rotation;
     }
@@ -63,31 +64,14 @@ public class CampLabel : MonoBehaviour
         );
 
         labelTransform = labelObject.GetComponent<RectTransform>();
-        labelTransform.localScale = Vector3.one * 0.0083f;
+        labelScale = WorldLabel.SceneScale;
+        labelTransform.localScale = Vector3.one * (WorldLabel.PixelsToWorld * labelScale);
         labelTransform.sizeDelta = new Vector2(242f, 80f);
 
         Canvas canvas = labelObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
         canvas.overrideSorting = true;
         canvas.sortingOrder = 20;
-
-        GameObject backgroundObject = new GameObject(
-            "Background",
-            typeof(RectTransform),
-            typeof(Image)
-        );
-        backgroundObject.transform.SetParent(labelObject.transform, false);
-
-        RectTransform backgroundRect =
-            backgroundObject.GetComponent<RectTransform>();
-        backgroundRect.anchorMin = Vector2.zero;
-        backgroundRect.anchorMax = Vector2.one;
-        backgroundRect.offsetMin = Vector2.zero;
-        backgroundRect.offsetMax = Vector2.zero;
-
-        Image background = backgroundObject.GetComponent<Image>();
-        background.color = new Color(0.16f, 0.16f, 0.16f, 0.92f);
-        background.raycastTarget = false;
 
         GameObject textObject = new GameObject(
             "Text",
@@ -103,11 +87,12 @@ public class CampLabel : MonoBehaviour
         textRect.offsetMax = new Vector2(-12f, -6f);
 
         Text text = textObject.GetComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = ReviewStudyFlow.StudyFont;
         text.fontSize = 52;
-        text.color = Color.white;
+        text.color = FrostUiTheme.Enamel;
         text.alignment = TextAnchor.MiddleCenter;
         text.raycastTarget = false;
+        WorldLabel.AddReadabilityOutline(text);
         text.text = "CAMP";
     }
 }

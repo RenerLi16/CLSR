@@ -1,7 +1,14 @@
 using System;
 using System.Collections.Generic;
+using CLSR.Simulation;
 using UnityEngine;
 
+/// <summary>
+/// Scene-facing wrapper around <see cref="RescueSimulation"/>. It keeps the
+/// draft plan for the legacy prototype panel, submits plans to the simulation,
+/// mirrors the result to the scene and formats the day summary. It contains no
+/// rules of its own: legality and resolution live in the simulation.
+/// </summary>
 public class RescueGameController : MonoBehaviour
 {
     private const string StartingSummary =
@@ -11,18 +18,6 @@ public class RescueGameController : MonoBehaviour
     [SerializeField]
     private ScenarioController scenarioController;
 
-    [Header("Current Game State")]
-    [SerializeField]
-    private int currentDay = 1;
-
-    [Tooltip("Logistics points not yet deployed. Deployed points are spent permanently.")]
-    [SerializeField]
-    private int logisticsPool;
-
-    [Tooltip("Storage camp points earned today; they arrive at the start of the next day.")]
-    [SerializeField]
-    private int pendingLogistics;
-
     [SerializeField]
     private List<ExpeditionAssignment> plannedAssignments =
         new List<ExpeditionAssignment>();
@@ -31,40 +26,32 @@ public class RescueGameController : MonoBehaviour
     private List<ExpeditionResult> lastDayResults =
         new List<ExpeditionResult>();
 
-    [SerializeField]
-    private int totalRescued;
-
-    [SerializeField]
-    private bool gameOver;
-
-    private readonly HashSet<string> rescuedNodeIds =
-        new HashSet<string>();
-
-    private readonly HashSet<string> claimedCacheIds =
-        new HashSet<string>();
+    /// <summary>Raised after every resolved day, before the summary is shown.</summary>
+    public event Action<DayOutcome> DayResolved;
 
     public string LastDaySummary { get; private set; } = StartingSummary;
 
-    public int CurrentDay
+    public DayOutcome LastOutcome { get; private set; }
+
+    private RescueSimulation Sim
     {
-        get { return currentDay; }
+        get
+        {
+            if (scenarioController == null) scenarioController = GetComponent<ScenarioController>();
+            return scenarioController.Simulation;
+        }
     }
 
-    public int TotalDays
-    {
-        get { return scenarioController.CurrentScenario.totalDays; }
-    }
+    public int CurrentDay => Sim.Day;
+
+    public int TotalDays => Sim.Scenario.TotalDays;
+
+    public int TotalLogisticsGranted => Sim.PointsGranted;
 
     /// <summary>Points still available to plan with (pool minus today's plan).</summary>
-    public int LogisticsRemaining
-    {
-        get { return logisticsPool - PointsPlannedToday; }
-    }
+    public int LogisticsRemaining => Sim.Pool - PointsPlannedToday;
 
-    public int PendingLogistics
-    {
-        get { return pendingLogistics; }
-    }
+    public int PendingLogistics => Sim.PendingPoints;
 
     public int PointsPlannedToday
     {
@@ -81,40 +68,23 @@ public class RescueGameController : MonoBehaviour
         }
     }
 
-    public int DailyDeploymentCap
-    {
-        get { return scenarioController.CurrentScenario.dailyDeploymentCap; }
-    }
+    public int DailyDeploymentCap => Sim.Scenario.DailyCap;
 
-    public int ExpeditionsPlannedToday
-    {
-        get { return plannedAssignments.Count; }
-    }
+    public int ExpeditionsPlannedToday => plannedAssignments.Count;
 
-    public int MaxExpeditionsPerDay
-    {
-        get { return scenarioController.CurrentScenario.maxExpeditionsPerDay; }
-    }
+    public int MaxExpeditionsPerDay => Sim.Scenario.MaxExpeditions;
 
-    public IReadOnlyList<ExpeditionAssignment> PlannedAssignments
-    {
-        get { return plannedAssignments; }
-    }
+    public IReadOnlyList<ExpeditionAssignment> PlannedAssignments => plannedAssignments;
 
-    public int TotalRescued
-    {
-        get { return totalRescued; }
-    }
+    public int TotalRescued => Sim.TotalRescued;
 
-    public int TotalSurvivors
-    {
-        get { return scenarioController.CountTotalSurvivors(); }
-    }
+    /// <summary>
+    /// The true scenario total. Hidden information: show it to participants
+    /// only once the scenario has ended (use PublicView.FinalTotalSurvivors).
+    /// </summary>
+    public int TotalSurvivors => Sim.Scenario.TotalSurvivors;
 
-    public bool GameOver
-    {
-        get { return gameOver; }
-    }
+    public bool GameOver => Sim.GameOver;
 
     private void Start()
     {
@@ -219,7 +189,7 @@ public class RescueGameController : MonoBehaviour
 
     public void ClearPlan()
     {
-        if (gameOver)
+        if (GameOver)
         {
             return;
         }
@@ -228,25 +198,23 @@ public class RescueGameController : MonoBehaviour
         PrintCurrentState();
     }
 
+    public static List<Leg> ToLegs(IEnumerable<ExpeditionAssignment> plan)
+    {
+        var legs = new List<Leg>();
+        if (plan == null) return legs;
+        foreach (ExpeditionAssignment trip in plan)
+            legs.Add(new Leg(trip.targetNodeId, trip.assignedGroups));
+        return legs;
+    }
+
+    /// <summary>Checks a plan against the simulation's rules without changing anything.</summary>
+    public PlanError ValidatePlan(IEnumerable<ExpeditionAssignment> plan) => Sim.Validate(ToLegs(plan));
+
     // The study screens draft plans without touching the simulation. Only the
     // final team plan reaches the engine, after all pre-outcome forms are closed.
     public bool TrySetPlan(IReadOnlyList<ExpeditionAssignment> plan)
     {
-        if (gameOver || plan.Count > MaxExpeditionsPerDay)
-            return false;
-
-        int spent = 0;
-        var seen = new HashSet<string>();
-        foreach (var trip in plan)
-        {
-            if (trip.assignedGroups <= 0 || trip.assignedGroups > DailyDeploymentCap ||
-                !seen.Add(trip.targetNodeId) ||
-                scenarioController.GetPathFromCamp(trip.targetNodeId).Count == 0)
-                return false;
-            spent += trip.assignedGroups;
-        }
-
-        if (spent > DailyDeploymentCap || spent > logisticsPool)
+        if (ValidatePlan(plan) != PlanError.None)
             return false;
 
         plannedAssignments.Clear();
@@ -265,56 +233,53 @@ public class RescueGameController : MonoBehaviour
     /// </summary>
     public void ConfirmPlan()
     {
-        if (gameOver)
+        if (Sim.HasPendingBranchReports)
+            return;
+
+        if (GameOver)
         {
             Debug.LogWarning("The search has already ended.");
             return;
         }
 
-        lastDayResults.Clear();
-        logisticsPool -= PointsPlannedToday;
-
-        foreach (ExpeditionAssignment assignment in plannedAssignments)
+        DayOutcome outcome = Sim.Submit(ToLegs(plannedAssignments));
+        if (outcome == null)
         {
-            lastDayResults.Add(ResolveAssignment(assignment));
-        }
-
-        LastDaySummary = BuildDaySummary();
-        Debug.Log("Day " + currentDay + " result: " + LastDaySummary);
-
-        plannedAssignments.Clear();
-
-        if (currentDay >= TotalDays)
-        {
-            gameOver = true;
-            LastDaySummary +=
-                " Search complete: " +
-                totalRescued +
-                " of " +
-                TotalSurvivors +
-                " survivors rescued.";
+            Debug.LogWarning("Plan rejected: " + Sim.Validate(ToLegs(plannedAssignments)));
             return;
         }
 
-        int finishedDay = currentDay;
-        currentDay++;
+        plannedAssignments.Clear();
+        LastOutcome = outcome;
+        lastDayResults.Clear();
+        foreach (ExpeditionOutcome expedition in outcome.Expeditions)
+            lastDayResults.Add(ExpeditionResult.From(expedition));
 
-        foreach (string report in scenarioController.ApplyIntelligenceReports(finishedDay))
-        {
-            LastDaySummary += "\n<b>Intelligence report:</b> " + report;
-        }
+        scenarioController.SyncSceneFromSimulation();
+        LastDaySummary = BuildDaySummary(outcome);
+        Debug.Log("Day " + outcome.Day + " result: " + LastDaySummary);
 
-        if (pendingLogistics > 0)
+        if (outcome.GameOver)
         {
-            logisticsPool += pendingLogistics;
             LastDaySummary +=
-                "\n+" + pendingLogistics +
-                " logistics " + (pendingLogistics == 1 ? "point" : "points") +
-                " arrived from storage camps.";
-            pendingLogistics = 0;
+                " Search complete: " + TotalRescued + " of " + TotalSurvivors + " survivors rescued.";
+        }
+        else
+        {
+            foreach (string report in outcome.RouteReports)
+                LastDaySummary += "\n<b>Intelligence report:</b> " + report;
+
+            if (outcome.PointsArrived > 0)
+            {
+                LastDaySummary +=
+                    "\n+" + outcome.PointsArrived +
+                    " logistics " + (outcome.PointsArrived == 1 ? "point" : "points") +
+                    " arrived from storage camps.";
+            }
         }
 
         PrintCurrentState();
+        DayResolved?.Invoke(outcome);
     }
 
     public void RestartGame()
@@ -328,10 +293,7 @@ public class RescueGameController : MonoBehaviour
         }
     }
 
-    public bool IsStorageCampClaimed(string nodeId)
-    {
-        return claimedCacheIds.Contains(nodeId);
-    }
+    public bool IsStorageCampClaimed(string nodeId) => Sim.IsCacheClaimed(nodeId);
 
     public int GetAssignedGroups(string nodeId)
     {
@@ -341,15 +303,10 @@ public class RescueGameController : MonoBehaviour
 
     private void ResetState()
     {
-        currentDay = 1;
-        logisticsPool = scenarioController.CurrentScenario.totalLogisticsPoints;
-        pendingLogistics = 0;
+        Sim.Reset();
         plannedAssignments.Clear();
         lastDayResults.Clear();
-        rescuedNodeIds.Clear();
-        claimedCacheIds.Clear();
-        totalRescued = 0;
-        gameOver = false;
+        LastOutcome = null;
         LastDaySummary = StartingSummary;
 
         string briefing = scenarioController.CurrentScenario.briefing;
@@ -364,7 +321,7 @@ public class RescueGameController : MonoBehaviour
 
     private RescueNode GetSelectedNodeForPlanning()
     {
-        if (gameOver)
+        if (GameOver)
         {
             Debug.LogWarning("The search has already ended.");
             return null;
@@ -393,132 +350,60 @@ public class RescueGameController : MonoBehaviour
         );
     }
 
-    private ExpeditionResult ResolveAssignment(ExpeditionAssignment assignment)
+    public static string BuildDaySummary(DayOutcome outcome)
     {
-        ExpeditionResult result = new ExpeditionResult
-        {
-            targetNodeId = assignment.targetNodeId,
-            assignedGroups = assignment.assignedGroups
-        };
-
-        List<RescueNodeDefinition> path =
-            scenarioController.GetPathFromCamp(assignment.targetNodeId);
-
-        if (path.Count == 0)
-        {
-            result.invalidRoute = true;
-            return result;
-        }
-
-        foreach (RescueNodeDefinition definition in path)
-        {
-            bool canPass = assignment.assignedGroups >= definition.difficulty;
-
-            scenarioController.TryGetSceneNode(definition.nodeId, out RescueNode sceneNode);
-
-            if (sceneNode != null)
-            {
-                sceneNode.RevealEncounter(canPass);
-            }
-
-            result.encounteredNodeIds.Add(definition.nodeId);
-
-            if (!canPass)
-            {
-                result.stoppedAtNodeId = definition.nodeId;
-                result.requiredGroups = definition.difficulty;
-                return result;
-            }
-
-            result.reachedNodeIds.Add(definition.nodeId);
-
-            if (
-                definition.survivorCount > 0 &&
-                rescuedNodeIds.Add(definition.nodeId)
-            )
-            {
-                result.rescuedSurvivors += definition.survivorCount;
-                totalRescued += definition.survivorCount;
-
-                if (sceneNode != null)
-                {
-                    sceneNode.MarkSurvivorsRescued();
-                }
-            }
-
-            if (
-                definition.logisticsReward > 0 &&
-                claimedCacheIds.Add(definition.nodeId)
-            )
-            {
-                result.cacheNodeIds.Add(definition.nodeId);
-                result.logisticsEarned += definition.logisticsReward;
-                pendingLogistics += definition.logisticsReward;
-            }
-        }
-
-        result.reachedTarget = true;
-        return result;
-    }
-
-    private string BuildDaySummary()
-    {
-        if (lastDayResults.Count == 0)
+        if (outcome.Expeditions.Count == 0)
         {
             return "No expeditions were launched.";
         }
 
         List<string> summaries = new List<string>();
 
-        foreach (ExpeditionResult result in lastDayResults)
+        foreach (ExpeditionOutcome result in outcome.Expeditions)
         {
             string team =
-                "Team of " + result.assignedGroups +
-                (result.assignedGroups == 1 ? " point" : " points");
+                "Team of " + result.Points +
+                (result.Points == 1 ? " point" : " points");
 
-            if (result.invalidRoute)
-            {
-                summaries.Add("Route to " + result.targetNodeId + " was invalid.");
-            }
-            else if (!string.IsNullOrEmpty(result.stoppedAtNodeId))
+            if (!string.IsNullOrEmpty(result.StoppedAt))
             {
                 summaries.Add(
                     team + " heading to " +
-                    result.targetNodeId +
+                    result.Target +
                     " stopped at " +
-                    result.stoppedAtNodeId +
+                    result.StoppedAt +
                     "; it needs " +
-                    result.requiredGroups +
+                    result.RequiredPoints +
                     " points to pass." +
-                    (result.rescuedSurvivors > 0
-                        ? " Rescued " + result.rescuedSurvivors + " on the way."
+                    (result.Rescued > 0
+                        ? " Rescued " + result.Rescued + " on the way."
                         : "")
                 );
             }
-            else if (result.rescuedSurvivors > 0)
+            else if (result.Rescued > 0)
             {
                 summaries.Add(
                     team + " reached " +
-                    result.targetNodeId +
+                    result.Target +
                     " and rescued " +
-                    result.rescuedSurvivors +
-                    (result.rescuedSurvivors == 1 ? " survivor." : " survivors.")
+                    result.Rescued +
+                    (result.Rescued == 1 ? " survivor." : " survivors.")
                 );
             }
             else
             {
                 summaries.Add(
                     team + " reached " +
-                    result.targetNodeId +
+                    result.Target +
                     ". No new survivors found."
                 );
             }
 
-            if (result.logisticsEarned > 0)
+            if (result.PointsEarned > 0)
             {
                 summaries.Add(
-                    "Storage camp secured: +" + result.logisticsEarned +
-                    " logistics " + (result.logisticsEarned == 1 ? "point" : "points") +
+                    "Storage camp secured: +" + result.PointsEarned +
+                    " logistics " + (result.PointsEarned == 1 ? "point" : "points") +
                     " tomorrow."
                 );
             }
@@ -530,11 +415,11 @@ public class RescueGameController : MonoBehaviour
     private void PrintCurrentState()
     {
         Debug.Log(
-            "Day " + currentDay +
+            "Day " + CurrentDay +
             " | Logistics left: " + LogisticsRemaining +
             " | Planned today: " + PointsPlannedToday + "/" + DailyDeploymentCap +
             " | Expeditions: " + ExpeditionsPlannedToday + "/" + MaxExpeditionsPerDay +
-            (pendingLogistics > 0 ? " | Arriving tomorrow: " + pendingLogistics : "")
+            (PendingLogistics > 0 ? " | Arriving tomorrow: " + PendingLogistics : "")
         );
     }
 }
@@ -562,4 +447,22 @@ public class ExpeditionResult
     public List<string> encounteredNodeIds = new List<string>();
     public List<string> reachedNodeIds = new List<string>();
     public List<string> cacheNodeIds = new List<string>();
+
+    public static ExpeditionResult From(ExpeditionOutcome outcome)
+    {
+        var result = new ExpeditionResult
+        {
+            targetNodeId = outcome.Target,
+            assignedGroups = outcome.Points,
+            reachedTarget = outcome.ReachedTarget,
+            stoppedAtNodeId = outcome.StoppedAt,
+            requiredGroups = outcome.RequiredPoints,
+            rescuedSurvivors = outcome.Rescued,
+            logisticsEarned = outcome.PointsEarned,
+        };
+        result.encounteredNodeIds.AddRange(outcome.Encountered);
+        result.reachedNodeIds.AddRange(outcome.Reached);
+        result.cacheNodeIds.AddRange(outcome.Caches);
+        return result;
+    }
 }

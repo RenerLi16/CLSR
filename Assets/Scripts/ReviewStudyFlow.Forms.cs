@@ -92,7 +92,7 @@ public sealed partial class ReviewStudyFlow
     private string BuildSampleMessage()
     {
         if (session.Condition == 1)
-            return "Please continue discussing your team's rescue plan. No additional information or recommendation is provided.";
+            return CLSR.Simulation.StudyProtocol.NeutralMessage;
         if (Mathf.Min(game.DailyDeploymentCap, game.LogisticsRemaining) == 0)
         {
             return session.Condition == 2
@@ -117,7 +117,7 @@ public sealed partial class ReviewStudyFlow
             return "I recommend " + Describe(provisional) +
                 ". This concentrates on the team’s selected destinations and fits the visible budget. Unrevealed thresholds could still block the route.";
 
-        var report = scenario.CurrentScenario.branches.OrderByDescending(r => r.reportedSurvivors).FirstOrDefault();
+        var report = scenario.CurrentScenario.branches.OrderByDescending(scenario.GetBranchEstimate).FirstOrDefault();
         string root = report?.rootNodeId ??
             scenario.CurrentScenario.nodes.First(n => n.parentNodeId == "Camp").nodeId;
         return $"I recommend sending 1 LP toward {root} to test its access threshold. " +

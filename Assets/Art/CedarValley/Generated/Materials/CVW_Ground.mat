@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CVW_Ground
+  m_Shader: {fileID: 4800000, guid: 3c98b69329064475cbaf44091a1f86f3, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MacroTex:
+        m_Texture: {fileID: 2800000, guid: fbcd64f38fead4e45bae16b3d8e82845, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PackedTex:
+        m_Texture: {fileID: 2800000, guid: 6a9d3d2fff2ac405d911de2488c50f75, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockNrm:
+        m_Texture: {fileID: 2800000, guid: 1be1f48d12f5c485db45f78114e464cd, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockTex:
+        m_Texture: {fileID: 2800000, guid: 7d789188c6c204664823c38923b9529e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SnowNrm:
+        m_Texture: {fileID: 2800000, guid: c1f65b27c30e845cfb76cb2508e50b82, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SnowTex:
+        m_Texture: {fileID: 2800000, guid: 5f8e16978eaf94409ad017420f2fe944, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SoilTex:
+        m_Texture: {fileID: 2800000, guid: 9e63ae6874ea84a27a24bb1f4464a0f5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AOStrength: 0.55
+    - _MacroStrength: 0.08
+    - _MacroTile: 180
+    - _NormalStrength: 0.4
+    - _PackedTile: 4
+    - _RockTile: 7
+    - _SnowTile: 8
+    - _SoilTile: 5
+    m_Colors:
+    - _RockTint: {r: 0.96, g: 0.96, b: 0.97, a: 1}
+    - _ScourColor: {r: 0.9, g: 0.91, b: 0.93, a: 1}
+    - _ShadeSnow: {r: 0.8, g: 0.82, b: 0.86, a: 1}
+    - _SnowColor: {r: 0.93, g: 0.94, b: 0.95, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

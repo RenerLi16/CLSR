@@ -1,0 +1,72 @@
+fileFormatVersion: 2
+guid: 91ff9e7b2be65e5bb60e991b7b12b5ff
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Snow
+    second: {fileID: 2100000, guid: c4518ea6de3f55ceaf22a224d4d11bd6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PackedSnow
+    second: {fileID: 2100000, guid: 5604c1c304d7513987d138d695aeba37, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: OldTimber
+    second: {fileID: 2100000, guid: 0c466a4d35ec59bfba154c078342fab1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LightTimber
+    second: {fileID: 2100000, guid: 562c01db3dd25022ab56397118388ad4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DarkTimber
+    second: {fileID: 2100000, guid: 1b87b77a5b15537a9c2ae6b6b5147871, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Iron
+    second: {fileID: 2100000, guid: a095484b464f58808037427d22c5d59c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ColdSteel
+    second: {fileID: 2100000, guid: 2dae6b979db2512e8f588a12137f2fd1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BlackIron
+    second: {fileID: 2100000, guid: be5963d0b2e75c67962656f93ae7b13a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GlassCold
+    second: {fileID: 2100000, guid: b960325e7d375487a2c8932747d7151d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Slate
+    second: {fileID: 2100000, guid: 00302eabc91950b188da8192ff2c5c69, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DarkSlate
+    second: {fileID: 2100000, guid: de4edb9d752e5d0aa587e0a42f1df1fb, type: 2}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 2
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    useFileScale: 0
+  tangentSpace:
+    normalImportMode: 0
+    tangentImportMode: 3

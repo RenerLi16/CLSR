@@ -33,7 +33,7 @@ public class RescueScenarioData : ScriptableObject
     [Tooltip("Public reports shown above each branch. Reported counts may differ from the truth.")]
     public List<BranchReport> branches = new List<BranchReport>();
 
-    [Tooltip("Fixed reports that change the map at the start of a later day.")]
+    [Tooltip("Reports released between days. They can revise a branch estimate or, for legacy maps, a route difficulty.")]
     public List<IntelligenceReport> intelligenceReports = new List<IntelligenceReport>();
 
     [Header("Hidden Map Data")]
@@ -69,8 +69,19 @@ public class IntelligenceReport
     [Min(0)]
     public int newDifficulty;
 
+    public List<BranchEstimateRevision> revisedEstimates = new List<BranchEstimateRevision>();
+
     [TextArea(2, 4)]
     public string message;
+}
+
+[Serializable]
+public class BranchEstimateRevision
+{
+    public string rootNodeId;
+
+    [Min(0)]
+    public int reportedSurvivors;
 }
 
 [Serializable]

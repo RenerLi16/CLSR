@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CVW_RiverIce
+  m_Shader: {fileID: 4800000, guid: f57f7282798dc4861beb2e02db13fbd3, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MacroTex:
+        m_Texture: {fileID: 2800000, guid: fbcd64f38fead4e45bae16b3d8e82845, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 9a756f9f9d0304a84b530379e94f6e33, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SnowNrm:
+        m_Texture: {fileID: 2800000, guid: c1f65b27c30e845cfb76cb2508e50b82, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SnowTex:
+        m_Texture: {fileID: 2800000, guid: 5f8e16978eaf94409ad017420f2fe944, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Gloss: 0.25
+    - _SnowTile: 8
+    m_Colors:
+    - _IceDeep: {r: 0.5, g: 0.56, b: 0.6, a: 1}
+    - _IcePale: {r: 0.78, g: 0.81, b: 0.84, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

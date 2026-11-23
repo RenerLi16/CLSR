@@ -1,0 +1,57 @@
+fileFormatVersion: 2
+guid: feb877a1645550ef89c8feb1cc6eb952
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Snow
+    second: {fileID: 2100000, guid: c4518ea6de3f55ceaf22a224d4d11bd6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DarkTimber
+    second: {fileID: 2100000, guid: 1b87b77a5b15537a9c2ae6b6b5147871, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Iron
+    second: {fileID: 2100000, guid: a095484b464f58808037427d22c5d59c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ColdSteel
+    second: {fileID: 2100000, guid: 2dae6b979db2512e8f588a12137f2fd1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BlackIron
+    second: {fileID: 2100000, guid: be5963d0b2e75c67962656f93ae7b13a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Rust
+    second: {fileID: 2100000, guid: bcbd62a9a577512093d5967c385be924, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: OxideRed
+    second: {fileID: 2100000, guid: bd791c87879e5819a5222192b5b7417a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: EnamelCream
+    second: {fileID: 2100000, guid: 90838c57c6d9524a82348b34a6b36a6a, type: 2}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 2
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    useFileScale: 0
+  tangentSpace:
+    normalImportMode: 0
+    tangentImportMode: 3
