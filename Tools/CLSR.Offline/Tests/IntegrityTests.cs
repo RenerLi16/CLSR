@@ -21,14 +21,14 @@ namespace CLSR.Offline.Tests
             {
                 int survivors = n.Survivors, difficulty = n.Difficulty;
                 if (n.Id == "R3") survivors = 0;      // swap R3/R4 inside the River Road junction subtree
-                if (n.Id == "R4") survivors = 1;
+                if (n.Id == "R4") survivors = 2;
                 if (n.Id == "N3") difficulty = 5;     // a harder unexplored threshold
                 if (n.Id == "N2") survivors = 0;      // North Ridge actually empty
                 if (n.Id == "N4") survivors = 0;
                 nodes.Add(new NodeSpec(n.Id, n.ParentId, n.Depth, difficulty, survivors, n.CacheReward));
             }
             return new ScenarioSpec(cedar.Name, cedar.TotalDays, cedar.TotalPoints, cedar.DailyCap, cedar.MaxExpeditions,
-                cedar.Briefing, nodes, cedar.Branches, cedar.Reports);
+                cedar.Briefing, nodes, cedar.Branches, cedar.Reports, cedar.CumulativeCosts);
         }
 
         [Test]
@@ -61,12 +61,12 @@ namespace CLSR.Offline.Tests
             sim.Submit(Scenarios.Plan("W2", 1));
             PublicView view = sim.View();
             Assert.Equal(NodeDiscovery.Blocked, view.Get("W2").Discovery, "W2 blocked");
-            Assert.Equal(2, view.Get("W2").KnownDifficulty, "blocking threshold known");
+            Assert.Equal(1, view.Get("W2").KnownDifficulty, "blocking cost known");
             Assert.Null(view.Get("W2").KnownRemainingHere, "W2 count hidden");
             Assert.Null(view.Get("W3").KnownDifficulty, "beyond the block stays unknown");
-            Assert.Equal(3, view.Get("W2").KnownBranchRemaining, "passing W1 reveals W2's branch total");
+            Assert.Equal(5, view.Get("W2").KnownBranchRemaining, "passing W1 reveals W2's branch total");
             Assert.Equal(0, view.Get("W1").KnownRemainingHere, "W1 rescued, now 0");
-            Assert.Equal(3, view.Get("W1").KnownRemainingBeyond, "W1 beyond");
+            Assert.Equal(5, view.Get("W1").KnownRemainingBeyond, "W1 beyond");
         }
 
         [Test]
@@ -105,16 +105,16 @@ namespace CLSR.Offline.Tests
             sim.Submit(Scenarios.Plan());
             Assert.Null(sim.View().FinalTotalSurvivors, "hidden on day 3");
             sim.Submit(Scenarios.Plan());
-            Assert.Equal(15, sim.View().FinalTotalSurvivors, "published at the end");
+            Assert.Equal(21, sim.View().FinalTotalSurvivors, "published at the end");
         }
 
         [Test]
         public static void UnannouncedCachesStayHidden()
         {
             var sim = new RescueSimulation(Scenarios.Cedar());
-            PublicView view = sim.View(new HashSet<string> { "W2" });
-            Assert.Equal(1, view.Get("W2").AvailableCacheReward, "announced cache");
-            Assert.Null(view.Get("N3").AvailableCacheReward, "cache without a marker");
+            PublicView view = sim.View(new HashSet<string> { "N3" });
+            Assert.Equal(5, view.Get("N3").AvailableCacheReward, "announced cache");
+            Assert.Null(sim.View(new HashSet<string>()).Get("N3").AvailableCacheReward, "cache without a marker");
         }
 
         [Test]

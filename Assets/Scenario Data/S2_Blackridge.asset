@@ -14,131 +14,186 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RescueScenarioData
   scenarioName: Blackridge Storm Rescue
   totalDays: 3
-  totalLogisticsPoints: 9
-  dailyDeploymentCap: 4
+  totalLogisticsPoints: 10
+  dailyDeploymentCap: 5
   maxExpeditionsPerDay: 2
-  briefing: Early aerial counts give rough estimates for the four search branches. A storage cache at Creek Shelter supplies one extra logistics point on the following day.
+  cumulativeCosts: 1
+  briefing: "Every point a team carries is spent crossing the trail. A team keeps walking while it can still pay the next stretch, and stops where it runs out. The cache at Creek Shelter supplies points the day after a team passes it."
   branches:
   - branchName: West Fork
     rootNodeId: West Fork
     reportedSurvivors: 3
-    note:
+    note: Supply cache at Creek Shelter grants +5 next day. The lookout is farther along the other trail.
   - branchName: North Pass
     rootNodeId: North Pass
     reportedSurvivors: 5
-    note:
+    note: No cache. The summit is the longest approach in the pass.
   - branchName: Lake Fork
     rootNodeId: Lake Fork
-    reportedSurvivors: 3
-    note:
+    reportedSurvivors: 4
+    note: "No cache. The two outer sites are equally deep, but the approaches may differ in cost."
   - branchName: South Spur
     rootNodeId: South Spur
     reportedSurvivors: 1
-    note:
+    note: No cache. The ridge route extends beyond Slide Zone.
   intelligenceReports:
   - afterDay: 1
     nodeId:
     newDifficulty: 0
     revisedEstimates:
     - rootNodeId: North Pass
-      reportedSurvivors: 1
+      reportedSurvivors: 3
     - rootNodeId: South Spur
-      reportedSurvivors: 4
-    message: 'Second-pass aerial sweep: the North Pass count included a packing crew that had already evacuated. The South Spur count missed a group holding near Ridge Cache.'
+      reportedSurvivors: 8
+    message: "Second-pass aerial sweep: the North Pass count included a packing crew that had already evacuated. The South Spur count missed a group holding near Ridge Cache."
   nodes:
   - nodeId: Camp
     parentNodeId: 
     depth: 0
     difficulty: 0
     survivorCount: 0
+    logisticsReward: 0
   - nodeId: West Fork
     parentNodeId: Camp
     depth: 1
     difficulty: 1
     survivorCount: 0
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 0
   - nodeId: Fallen Timber Trail
     parentNodeId: West Fork
     depth: 2
-    difficulty: 2
-    survivorCount: 0
+    difficulty: 1
+    survivorCount: 3
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 3
   - nodeId: Fire Lookout
     parentNodeId: Fallen Timber Trail
     depth: 3
-    difficulty: 3
+    difficulty: 1
     survivorCount: 3
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 3
   - nodeId: Creek Shelter
     parentNodeId: West Fork
     depth: 2
-    difficulty: 2
-    survivorCount: 1
-    logisticsReward: 1
+    difficulty: 1
+    survivorCount: 2
+    logisticsReward: 5
+    playerNote:
+    truthNote: HERE 2
   - nodeId: North Pass
     parentNodeId: Camp
     depth: 1
     difficulty: 1
     survivorCount: 0
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 0
   - nodeId: Rockslide Gate
     parentNodeId: North Pass
     depth: 2
-    difficulty: 2
+    difficulty: 1
     survivorCount: 0
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 0
   - nodeId: Upper Ridge
     parentNodeId: Rockslide Gate
     depth: 3
-    difficulty: 3
+    difficulty: 1
     survivorCount: 1
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 1
   - nodeId: Summit Cabin
     parentNodeId: Upper Ridge
     depth: 4
-    difficulty: 4
-    survivorCount: 1
-  - nodeId: Miner's Hut
-    parentNodeId: Rockslide Gate
-    depth: 3
     difficulty: 2
     survivorCount: 1
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 1
+  - nodeId: "Miner's Hut"
+    parentNodeId: Rockslide Gate
+    depth: 3
+    difficulty: 1
+    survivorCount: 2
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 2
   - nodeId: Lake Fork
     parentNodeId: Camp
     depth: 1
     difficulty: 1
     survivorCount: 0
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 0
   - nodeId: Flooded Causeway
     parentNodeId: Lake Fork
     depth: 2
-    difficulty: 2
+    difficulty: 1
     survivorCount: 1
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 1
   - nodeId: Lakeside Camp
     parentNodeId: Flooded Causeway
     depth: 3
     difficulty: 2
     survivorCount: 2
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 2
   - nodeId: Weather Station
     parentNodeId: Flooded Causeway
     depth: 3
-    difficulty: 3
-    survivorCount: 1
+    difficulty: 1
+    survivorCount: 4
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 4
   - nodeId: South Spur
     parentNodeId: Camp
     depth: 1
     difficulty: 1
     survivorCount: 1
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 1
   - nodeId: Timber Cut
     parentNodeId: South Spur
     depth: 2
-    difficulty: 2
-    survivorCount: 1
+    difficulty: 1
+    survivorCount: 2
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 2
   - nodeId: Gravel Pit
     parentNodeId: Timber Cut
     depth: 3
-    difficulty: 3
+    difficulty: 1
     survivorCount: 2
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 2
   - nodeId: Slide Zone
     parentNodeId: Timber Cut
     depth: 3
-    difficulty: 3
+    difficulty: 1
     survivorCount: 0
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 0
   - nodeId: Ridge Cache
     parentNodeId: Slide Zone
     depth: 4
-    difficulty: 4
-    survivorCount: 3
+    difficulty: 1
+    survivorCount: 2
+    logisticsReward: 0
+    playerNote:
+    truthNote: HERE 2

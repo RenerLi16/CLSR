@@ -22,6 +22,9 @@ public sealed partial class ReviewStudyFlow
             frostPopupPointer = point;
         }
         UpdateTacticalNotifications();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        PollSelfTest();
+#endif
     }
 
     private void TrackFrostPopupPointer(Event input)
@@ -114,7 +117,7 @@ public sealed partial class ReviewStudyFlow
         int? difficulty = known?.KnownDifficulty;
         DrawFrostStat(box, 48 * s, "Survivors here", here);
         DrawFrostStat(box, 73 * s, frontier ? "Branch total" : "Survivors beyond", beyond);
-        DrawFrostStat(box, 98 * s, "Minimum LP to pass", difficulty);
+        DrawFrostStat(box, 98 * s, scenario.Spec.CumulativeCosts ? "Crossing cost" : "Minimum LP to pass", difficulty);
     }
 
     private static void DrawFrostTitle(Rect rect, string title, GUIStyle style, bool outline = false)

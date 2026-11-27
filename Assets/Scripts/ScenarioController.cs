@@ -129,7 +129,7 @@ public class ScenarioController : MonoBehaviour
         }
 
         return new ScenarioSpec(data.scenarioName, data.totalDays, data.totalLogisticsPoints,
-            data.dailyDeploymentCap, data.maxExpeditionsPerDay, data.briefing, nodes, branches, reports);
+            data.dailyDeploymentCap, data.maxExpeditionsPerDay, data.briefing, nodes, branches, reports, data.cumulativeCosts);
     }
 
     // ----- What the player is allowed to know -----

@@ -46,6 +46,12 @@ public class MapOverlayScaler : MonoBehaviour
         public bool WasEnabled;
     }
 
+    /// <summary>While set (telescope sighting), every marker visual and label twin is hidden.</summary>
+    public static bool Suppressed;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => Suppressed = false;
+
     private readonly List<Marker> markers = new List<Marker>();
     private readonly List<Label> labels = new List<Label>();
     private readonly HashSet<Canvas> known = new HashSet<Canvas>();
@@ -173,6 +179,9 @@ public class MapOverlayScaler : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (visualRoot != null && visualRoot.gameObject.activeSelf == Suppressed) visualRoot.gameObject.SetActive(!Suppressed);
+        if (overlay != null && overlay.gameObject.activeSelf == Suppressed) overlay.gameObject.SetActive(!Suppressed);
+        if (Suppressed) return;
         Camera cam = Camera.main;
         if (cam == null) return;
         if (framing == null || framing.gameObject != cam.gameObject) framing = cam.GetComponent<GraphCameraFraming>();

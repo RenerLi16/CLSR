@@ -10,7 +10,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 {
     private enum Phase { Setup, Practice, PracticeResult, Observe, Handoff, Initial, Discuss,
         WaitForSupport, Intervention, Reconsider, FinalPlan, PreOutcome, Result, PostOutcome, Reasoning,
-        ScenarioResult, Complete, BranchReport }
+        ScenarioResult, Complete, BranchReport, TelescopeSelect, TelescopeView }
 
     private const string PracticeScene = "PrototypeMap";
     private const float MapDragThreshold = 6f;
@@ -56,7 +56,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
             Screen.height - ZoomButtonSize - ZoomBarMargin, ZoomBarWidth, ZoomButtonSize);
 
     private bool CanSelectMapNode => phase == Phase.Observe || IsPlanningPhase ||
-        phase == Phase.Result || phase == Phase.Intervention;
+        phase == Phase.Result || phase == Phase.Intervention || phase == Phase.TelescopeSelect;
 
     private static bool IsPointerOverMap(Vector2 pointer)
     {
@@ -129,11 +129,12 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
     {
         active = this;
         // Wheel zoom only applies over the map itself, never over HUD panels or forms.
-        GraphCameraFraming.AllowWheelZoomAt = pointer => active == this && IsPointerOverMap(pointer);
+        GraphCameraFraming.AllowWheelZoomAt = pointer => active == this && !IsTelescopeScreen && IsPointerOverMap(pointer);
     }
 
     private void OnDisable()
     {
+        AbortSighting();
         if (active != this) return;
         active = null;
         GraphCameraFraming.AllowWheelZoomAt = null;
@@ -221,11 +222,15 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
 
         EnsureTextStyles();
         TrackFrostPopupPointer(Event.current);
+        // The telescope handoff and sighting own the whole screen: no map input reaches the map.
+        if (IsTelescopeHandoff) { DrawTelescopeHandoff(); return; }
+        if (phase == Phase.TelescopeView) { DrawTelescopeView(); return; }
         HandleMapPointer();
 
         if (UsesLiteBoard)
         {
             DrawLiteBoard();
+            DrawSightingFade();
             return;
         }
 
@@ -257,6 +262,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         DrawMapZoom();
         GUI.backgroundColor = Color.white;
         DrawFrostNodePopup();
+        DrawSightingFade();
     }
 
     private GraphCameraFraming GetMapCamera()
@@ -363,16 +369,13 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 break;
             case Phase.Observe:
                 Heading("1. Observe the map");
-                Label("Spend from a shared scenario pool; unused logistics points carry forward. A storage camp pays once, the next day. Reaching a junction reveals a separate survivor total for each next branch, but not its exact locations or difficulty. DIFF is the minimum points to pass.");
+                Label("Spend from a shared scenario pool; unused logistics points carry forward. A storage camp pays once, the next day. Reaching a junction reveals a separate survivor total for each next branch, but not its exact locations or difficulty. " + (scenario.Spec.CumulativeCosts ? "Each site deducts its DIFF from the points that team still carries." : "DIFF is the minimum points to pass."));
                 Label(Summary());
                 Label(PublicBranches());
-                if (Button("Start private judgments"))
-                {
-                    initialResponses.Clear();
-                    provisional = null;
-                    finalPlan = null;
-                    BeginForms(Phase.Initial);
-                }
+                if (Button("Start private judgments")) StartPrivateJudgments();
+                break;
+            case Phase.TelescopeSelect:
+                DrawTelescopeSelect();
                 break;
             case Phase.Handoff:
                 Heading($"Pass the screen to Player {player + 1}");
@@ -389,12 +392,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                     new[] { "Very low", "Low", "Moderate", "High", "Very high" });
                 Choice("reason", "Which consideration most influenced your proposal?", Reasons);
                 Written("explanation", "Briefly explain why you chose this deployment plan.", 600);
-                if (Button("Finish private judgment"))
-                {
-                    initialResponses.Add(new InitialResponse(Value("branch"), Value("reason"), CopyPlan()));
-                    draft.Clear();
-                    if (!NextPlayer()) Timed(Phase.Discuss, StudyProtocol.InitialDiscussionSeconds);
-                }
+                if (Button("Finish private judgment")) FinishInitialJudgment();
                 break;
             case Phase.WaitForSupport:
                 Heading("4. Decision pause");
@@ -404,58 +402,31 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 Heading("4. Decision pause");
                 Label(interventionLabel);
                 Label(message);
-                if (TimedButton("Continue to further discussion"))
-                {
-                    LogInterventionClosed();
-                    Timed(Phase.Reconsider, StudyProtocol.FurtherDiscussionSeconds);
-                }
+                if (TimedButton("Continue to further discussion")) ContinueAfterIntervention();
                 break;
             case Phase.PreOutcome:
                 Heading($"Player {player + 1}: Before the outcome");
                 Label("Final plan: " + Describe(finalPlan));
                 DrawPreOutcome();
-                if (Button("Finish private ratings") && !NextPlayer())
-                {
-                    draft.Clear();
-                    draft.AddRange(finalPlan);
-                    if (Deploy()) Go(Phase.Result);
-                    else Go(Phase.FinalPlan, false);
-                }
+                if (Button("Finish private ratings")) FinishPreOutcome();
                 break;
             case Phase.PostOutcome:
                 Heading($"Player {player + 1}: After the outcome");
                 DrawPostOutcome();
-                if (Button("Finish individual evaluation") && !NextPlayer())
-                {
-                    if (game.GameOver) BeginForms(Phase.Reasoning);
-                    else Go(scenario.HasPendingBranchReports ? Phase.BranchReport : Phase.Observe);
-                }
+                if (Button("Finish individual evaluation")) FinishPostOutcome();
                 break;
             case Phase.BranchReport:
                 Heading("New intelligence report");
                 foreach (string report in scenario.PendingBranchReportMessages())
                     Label(report);
                 Label("These are revised estimates. Use the updated board when planning the next dispatch.");
-                if (Button("Acknowledge and update the board"))
-                {
-                    LogEvent("branch_report_acknowledged", "day", game.CurrentDay,
-                        "reports", string.Join(" | ", scenario.PendingBranchReportMessages()));
-                    scenario.AcknowledgeBranchReports();
-                    Go(Phase.Observe);
-                }
+                if (Button("Acknowledge and update the board")) AcknowledgeBranchReport();
                 break;
             case Phase.Reasoning:
                 Heading($"Player {player + 1}: Scenario reasoning");
                 for (int i = 0; i < Reasoning.Length; i++)
                     Written("reasoning" + i, Reasoning[i], 1000);
-                if (Button("Finish scenario reasoning") && !NextPlayer())
-                {
-                    session.Scores.Add($"{scenario.CurrentScenario.scenarioName}: {game.TotalRescued}/{game.TotalSurvivors}");
-                    LogEvent("scenario_complete", "scenario", ScenarioLabel(scenario),
-                        "scenario_index", session.ScenarioIndex, "rescued", game.TotalRescued,
-                        "total_survivors", game.TotalSurvivors);
-                    Go(Phase.ScenarioResult);
-                }
+                if (Button("Finish scenario reasoning")) FinishReasoning();
                 break;
             case Phase.ScenarioResult:
                 Heading("Scenario complete");
@@ -484,6 +455,62 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
                 }
                 break;
         }
+    }
+
+    // ----- Button actions (shared by the panel UI and the development self-test)
+    private void StartPrivateJudgments()
+    {
+        initialResponses.Clear();
+        provisional = null;
+        finalPlan = null;
+        BeginForms(Phase.Initial);
+    }
+
+    private void FinishInitialJudgment()
+    {
+        initialResponses.Add(new InitialResponse(Value("branch"), Value("reason"), CopyPlan()));
+        draft.Clear();
+        if (!NextPlayer()) Timed(Phase.Discuss, StudyProtocol.InitialDiscussionSeconds);
+    }
+
+    private void ContinueAfterIntervention()
+    {
+        LogInterventionClosed();
+        Timed(Phase.Reconsider, StudyProtocol.FurtherDiscussionSeconds);
+    }
+
+    private void FinishPreOutcome()
+    {
+        if (NextPlayer()) return;
+        draft.Clear();
+        draft.AddRange(finalPlan);
+        if (Deploy()) Go(Phase.Result);
+        else Go(Phase.FinalPlan, false);
+    }
+
+    private void FinishPostOutcome()
+    {
+        if (NextPlayer()) return;
+        if (game.GameOver) BeginForms(Phase.Reasoning);
+        else Go(scenario.HasPendingBranchReports ? Phase.BranchReport : Phase.Observe);
+    }
+
+    private void AcknowledgeBranchReport()
+    {
+        LogEvent("branch_report_acknowledged", "day", game.CurrentDay,
+            "reports", string.Join(" | ", scenario.PendingBranchReportMessages()));
+        scenario.AcknowledgeBranchReports();
+        Go(Phase.Observe);
+    }
+
+    private void FinishReasoning()
+    {
+        if (NextPlayer()) return;
+        session.Scores.Add($"{scenario.CurrentScenario.scenarioName}: {game.TotalRescued}/{game.TotalSurvivors}");
+        LogEvent("scenario_complete", "scenario", ScenarioLabel(scenario),
+            "scenario_index", session.ScenarioIndex, "rescued", game.TotalRescued,
+            "total_survivors", game.TotalSurvivors);
+        Go(Phase.ScenarioResult);
     }
 
     private void DrawPlan()
@@ -575,6 +602,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         form = target;
         player = 0;
         ResetForm();
+        if (UsesTelescope) GetMapCamera()?.ResetView();
         Go(Phase.Handoff);
     }
 
@@ -583,6 +611,7 @@ public sealed partial class ReviewStudyFlow : MonoBehaviour
         LogFormComplete();
         ResetForm();
         if (++player >= 3) return false;
+        if (UsesTelescope) GetMapCamera()?.ResetView();
         Go(Phase.Handoff);
         return true;
     }

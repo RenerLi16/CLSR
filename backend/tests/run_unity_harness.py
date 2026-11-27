@@ -30,28 +30,28 @@ def check_snapshots(log):
     def site(context, id):
         return next(site for site in context["sites"] if site["id"] == id)
 
-    assert day1["points_available"] == 9 and day1["released_route_reports"] == []
-    assert site(day1, "R1")["initial_branch_report"] == 5
+    assert day1["points_available"] == 10 and day1["cumulative_costs"] and day1["released_route_reports"] == []
+    assert site(day1, "R1")["initial_branch_report"] == 6
     assert site(day1, "C1")["initial_branch_report"] == 1
-    assert site(day1, "W1")["initial_branch_report"] == 3
-    assert site(day1, "W1")["initial_branch_note"] == "Storage +1 · access estimate 2–3"
-    assert site(day1, "W2")["available_cache_reward"] == 1
+    assert site(day1, "W1")["initial_branch_report"] == 5
+    assert site(day1, "W1")["initial_branch_note"] == "No cache. Trail crews expect the two outer approaches to differ in cost."
+    assert site(day1, "N3")["available_cache_reward"] == 5
     assert site(day1, "W2")["known_branch_remaining"] is None
     assert site(day1, "W2")["known_difficulty"] is None
     assert site(day1, "C3")["known_remaining_here"] is None
     assert day1["initial_judgments"][2] == {"branch": None, "reason": None, "plan": []}
-    assert pending["points_available"] == 8 and pending["released_route_reports"] == []
-    assert day2["points_available"] == 8 and len(day2["released_route_reports"]) == 1
-    assert "River Road: 5 → 1" in day2["released_route_reports"][0]
-    assert "Cliff Pass: 1 → 4" in day2["released_route_reports"][0]
-    assert site(day2, "W2")["known_difficulty"] == 2
+    assert pending["points_available"] == 9 and pending["released_route_reports"] == []
+    assert day2["points_available"] == 9 and len(day2["released_route_reports"]) == 1
+    assert "River Road: 6 → 4" in day2["released_route_reports"][0]
+    assert "Cliff Pass: 1 → 7" in day2["released_route_reports"][0]
+    assert site(day2, "W2")["known_difficulty"] == 1
     assert site(day2, "W2")["known_remaining_here"] is None
-    assert site(day2, "W2")["known_branch_remaining"] == 3
-    assert day3["points_available"] == 7 and site(day3, "W2")["available_cache_reward"] is None
-    assert site(day3, "W2")["known_remaining_here"] == 0
+    assert site(day2, "W2")["known_branch_remaining"] == 5
+    assert day3["points_available"] == 11 and site(day3, "N3")["available_cache_reward"] is None
+    assert site(day3, "N3")["known_remaining_here"] == 0
     assert day3["released_route_reports"] == day2["released_route_reports"]
     assert site(day3, "C3")["known_difficulty"] is None
-    assert reset["released_route_reports"] == [] and site(reset, "W2")["available_cache_reward"] == 1
+    assert reset["released_route_reports"] == [] and site(reset, "N3")["available_cache_reward"] == 5
 
 
 def main():

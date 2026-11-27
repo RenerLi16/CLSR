@@ -139,7 +139,7 @@ namespace CLSR.Offline.Tests
             // Truncate Cedar Valley to two days so exhaustive search over legal plans is cheap.
             ScenarioSpec cedar = Scenarios.Cedar();
             var spec = new ScenarioSpec(cedar.Name, 2, cedar.TotalPoints, cedar.DailyCap, cedar.MaxExpeditions,
-                cedar.Briefing, cedar.Nodes, cedar.Branches, new List<IntelReportSpec>());
+                cedar.Briefing, cedar.Nodes, cedar.Branches, new List<IntelReportSpec>(), cedar.CumulativeCosts);
             var first = PlanSpace.Enumerate(new RescueSimulation(spec).View());
             int best = 0;
             foreach (var day1 in first)
@@ -165,8 +165,8 @@ namespace CLSR.Offline.Tests
             var plans = PlanSpace.Enumerate(sim.View());
             foreach (var plan in plans)
                 Assert.Equal(PlanError.None, sim.Validate(plan), "enumerated plan is legal");
-            // 16 sites: 1 empty + 16*4 singles + C(16,2) * 6 point splits within the cap of 4.
-            Assert.Equal(1 + 16 * 4 + 120 * 6, plans.Count, "complete enumeration");
+            // 16 sites: 1 empty + 16*5 singles + C(16,2) * 10 point splits within the cap of 5.
+            Assert.Equal(1 + 16 * 5 + 120 * 10, plans.Count, "complete enumeration");
         }
 
         [Test]

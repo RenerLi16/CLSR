@@ -13,6 +13,9 @@ public class RescueScenarioData : ScriptableObject
     public int totalDays = 3;
 
     [Header("Logistics")]
+    [Tooltip("Spend the local crossing cost at every site along the route.")]
+    public bool cumulativeCosts;
+
     [Tooltip("Logistics points available for the whole scenario. Deployed points are spent permanently.")]
     [Min(0)]
     public int totalLogisticsPoints = 9;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CLSR.Simulation;
 
 namespace CLSR.Offline.Tests
@@ -32,14 +33,65 @@ namespace CLSR.Offline.Tests
             ScenarioSpec cedar = Scenarios.Cedar();
             Assert.Equal("Cedar Valley", cedar.Name, "name");
             Assert.Equal(3, cedar.TotalDays, "days");
-            Assert.Equal(9, cedar.TotalPoints, "pool");
-            Assert.Equal(4, cedar.DailyCap, "daily cap");
+            Assert.Equal(10, cedar.TotalPoints, "pool");
+            Assert.Equal(5, cedar.DailyCap, "daily cap");
             Assert.Equal(2, cedar.MaxExpeditions, "expedition cap");
             Assert.Equal(17, cedar.Nodes.Count, "nodes incl. camp");
-            Assert.Equal(15, cedar.TotalSurvivors, "true survivors");
-            Assert.Equal("Storage +3 · access estimate 3–4", cedar.FindBranch("N1").Note, "escaped note");
+            Assert.Equal(21, cedar.TotalSurvivors, "true survivors");
+            Assert.True(cedar.FindBranch("N1").Note.Contains("N3 grants +5"), "cache named in the initial report");
             Assert.Equal(4, Scenarios.Blackridge().Branches.Count, "Blackridge branches");
             Assert.True(Scenarios.Blackridge().Reports[0].Message.StartsWith("Second-pass aerial sweep"), "single-quoted message");
+        }
+
+        [Test]
+        public static void FormalMapOptimaMatchInstructorVerifier()
+        {
+            void Check(ScenarioSpec spec, int optimum, int singleTeam, int smallerBudget)
+            {
+                Assert.True(spec.CumulativeCosts, spec.Name + " uses crossing costs");
+                World world = World.FromTruth(spec);
+                int Best() => new OracleSolver(world).Best(0, 0, 0, spec.TotalPoints);
+                Assert.Equal(optimum, Best(), spec.Name + " optimum");
+                world.MaxExpeditions = 1;
+                Assert.Equal(singleTeam, Best(), spec.Name + " single team");
+                world.MaxExpeditions = spec.MaxExpeditions;
+                world.DailyCap--;
+                Assert.Equal(smallerBudget, Best(), spec.Name + " daily cap minus one");
+            }
+
+            Check(Scenarios.Cedar(), 14, 13, 13);
+            Check(Scenarios.Blackridge(), 18, 16, 16);
+        }
+
+        [Test]
+        public static void FormalMapExpeditionsPayEachCrossingAndRevealLocalDifficulty()
+        {
+            foreach (ScenarioSpec spec in new[] { Scenarios.Cedar(), Scenarios.Blackridge() })
+            foreach (NodeSpec target in spec.Nodes)
+            {
+                if (target.Id == ScenarioSpec.CampId) continue;
+                var route = spec.PathFromCamp(target.Id);
+                for (int points = 1; points <= spec.DailyCap; points++)
+                {
+                    var sim = new RescueSimulation(spec);
+                    var leg = sim.Submit(Scenarios.Plan(target.Id, points)).Expeditions[0];
+                    int distance = 0, rescued = 0;
+                    foreach (NodeSpec site in route)
+                    {
+                        distance += site.Difficulty;
+                        Assert.Equal(site.Difficulty, sim.View().Get(site.Id).KnownDifficulty, "local cost");
+                        if (distance > points)
+                        {
+                            Assert.Equal(site.Id, leg.StoppedAt, "first unaffordable site");
+                            Assert.Equal(distance - points, leg.RequiredPoints, "shortfall");
+                            break;
+                        }
+                        rescued += site.Survivors;
+                    }
+                    Assert.Equal(rescued, leg.Rescued, "rescues along affordable prefix");
+                    Assert.Equal(distance <= points, leg.ReachedTarget, "destination reached");
+                }
+            }
         }
 
         [Test]
@@ -77,10 +129,10 @@ namespace CLSR.Offline.Tests
             Assert.Equal(PlanError.DuplicateTarget, sim.Validate(Scenarios.Plan("W1", 1, "W1", 1)), "duplicate target");
             Assert.Equal(PlanError.UnknownTarget, sim.Validate(Scenarios.Plan("Camp", 1)), "camp target");
             Assert.Equal(PlanError.UnknownTarget, sim.Validate(Scenarios.Plan("Z9", 1)), "unknown target");
-            Assert.Equal(PlanError.OverDailyCap, sim.Validate(Scenarios.Plan("W1", 5)), "one team over cap");
-            Assert.Equal(PlanError.OverDailyCap, sim.Validate(Scenarios.Plan("W1", 3, "R1", 2)), "plan over cap");
+            Assert.Equal(PlanError.OverDailyCap, sim.Validate(Scenarios.Plan("W1", 6)), "one team over cap");
+            Assert.Equal(PlanError.OverDailyCap, sim.Validate(Scenarios.Plan("W1", 4, "R1", 2)), "plan over cap");
 
-            sim.Submit(Scenarios.Plan("N1", 4));
+            sim.Submit(Scenarios.Plan("N1", 5));
             sim.AcknowledgeBranchReports();
             sim.Submit(Scenarios.Plan("R1", 4));
             Assert.Equal(1, sim.Pool, "one point left on day 3");
@@ -94,7 +146,7 @@ namespace CLSR.Offline.Tests
         {
             var sim = new RescueSimulation(Scenarios.Cedar());
             string before = TestRunner.Dump(sim.View());
-            Assert.Null(sim.Submit(Scenarios.Plan("W1", 3, "R1", 2)), "illegal plan rejected");
+            Assert.Null(sim.Submit(Scenarios.Plan("W1", 4, "R1", 2)), "illegal plan rejected");
             Assert.Equal(before, TestRunner.Dump(sim.View()), "state unchanged");
             Assert.Equal(1, sim.Day, "still day 1");
         }
@@ -106,24 +158,24 @@ namespace CLSR.Offline.Tests
             DayOutcome day1 = sim.Submit(Scenarios.Plan("W2", 1));
             Assert.Equal(1, day1.PointsSpent, "spent");
             Assert.Equal("W2", day1.Expeditions[0].StoppedAt, "blocked at W2");
-            Assert.Equal(2, day1.Expeditions[0].RequiredPoints, "threshold revealed");
-            Assert.Equal(1, day1.Expeditions[0].Rescued, "rescued W1 on the way");
-            Assert.Equal(8, sim.Pool, "blocked team's point is gone; the rest carries over");
+            Assert.Equal(1, day1.Expeditions[0].RequiredPoints, "one point short at W2");
+            Assert.Equal(0, day1.Expeditions[0].Rescued, "W1 is empty");
+            Assert.Equal(9, sim.Pool, "blocked team's point is gone; the rest carries over");
             Assert.Equal(2, sim.Day, "advanced");
-            Assert.Equal(4, sim.TodayBudget, "daily cap applies again on day 2");
+            Assert.Equal(5, sim.TodayBudget, "daily cap applies again on day 2");
         }
 
         [Test]
         public static void StoragePointsArriveTheNextDayOnce()
         {
             var sim = new RescueSimulation(Scenarios.Cedar());
-            DayOutcome day1 = sim.Submit(Scenarios.Plan("W2", 2, "R1", 1));
-            Assert.Equal(1, day1.Expeditions[0].PointsEarned, "W2 cache claimed");
-            Assert.Equal(1, day1.PointsArrived, "arrives at the start of day 2");
-            Assert.Equal(9 - 3 + 1, sim.Pool, "pool after storage");
-            Assert.Equal(10, sim.PointsGranted, "granted total");
+            DayOutcome day1 = sim.Submit(Scenarios.Plan("N3", 3, "R1", 1));
+            Assert.Equal(5, day1.Expeditions[0].PointsEarned, "N3 cache claimed");
+            Assert.Equal(5, day1.PointsArrived, "arrives at the start of day 2");
+            Assert.Equal(10 - 4 + 5, sim.Pool, "pool after storage");
+            Assert.Equal(15, sim.PointsGranted, "granted total");
             sim.AcknowledgeBranchReports();
-            DayOutcome day2 = sim.Submit(Scenarios.Plan("W3", 3));
+            DayOutcome day2 = sim.Submit(Scenarios.Plan("N3", 3));
             Assert.Equal(0, day2.Expeditions[0].PointsEarned, "cache pays once");
             Assert.Equal(0, day2.PointsArrived, "nothing new arrives");
         }
@@ -132,14 +184,14 @@ namespace CLSR.Offline.Tests
         public static void NoDuplicateRescues()
         {
             var sim = new RescueSimulation(Scenarios.Cedar());
-            DayOutcome day1 = sim.Submit(Scenarios.Plan("R2", 2, "R1", 1));
-            Assert.Equal(2, day1.Expeditions[0].Rescued, "first team rescues R1 and R2");
-            Assert.Equal(0, day1.Expeditions[1].Rescued, "second team finds R1 already rescued");
-            Assert.Equal(2, sim.TotalRescued, "total");
+            DayOutcome day1 = sim.Submit(Scenarios.Plan("R2", 2, "R3", 2));
+            Assert.Equal(1, day1.Expeditions[0].Rescued, "first team rescues R1 and R2");
+            Assert.Equal(0, day1.Expeditions[1].Rescued, "second team finds R2 already rescued");
+            Assert.Equal(1, sim.TotalRescued, "total");
             sim.AcknowledgeBranchReports();
             DayOutcome day2 = sim.Submit(Scenarios.Plan("R2", 2));
             Assert.Equal(0, day2.Rescued, "no rescue twice on a later day");
-            Assert.Equal(2, sim.TotalRescued, "total unchanged");
+            Assert.Equal(1, sim.TotalRescued, "total unchanged");
         }
 
         [Test]
@@ -173,15 +225,15 @@ namespace CLSR.Offline.Tests
             var spec = Scenarios.Cedar();
             var sim = new RescueSimulation(spec);
             sim.Submit(Scenarios.Plan("W3", 3, "R1", 1));
-            Assert.Equal(6, sim.Pool, "5 left + 1 from the W2 storage camp");
+            Assert.Equal(6, sim.Pool, "six points left after spending four");
             sim.AcknowledgeBranchReports();
             DayOutcome day2 = sim.Submit(Scenarios.Plan("C3", 3));
-            Assert.Equal(5, day2.Rescued, "one at C2 and four at C3");
+            Assert.Equal(6, day2.Rescued, "one each at C1 and C2, four at C3");
             sim.Submit(Scenarios.Plan("R3", 3));
             int expected = 0;
             foreach (NodeSpec node in spec.Nodes) if (sim.IsRescued(node.Id)) expected += node.Survivors;
             Assert.Equal(expected, sim.TotalRescued, "score equals survivors at rescued sites");
-            Assert.Equal(11, sim.TotalRescued, "three from West Woods, five from Cliff Pass, three from River Road");
+            Assert.Equal(12, sim.TotalRescued, "three from West Woods, six from Cliff Pass, three from River Road");
             Assert.True(sim.GameOver, "finished after three days");
         }
 
@@ -190,7 +242,8 @@ namespace CLSR.Offline.Tests
         {
             ScenarioSpec cedar = Scenarios.Cedar();
             var legacy = new ScenarioSpec(cedar.Name, cedar.TotalDays, cedar.TotalPoints, cedar.DailyCap, cedar.MaxExpeditions,
-                cedar.Briefing, cedar.Nodes, cedar.Branches,
+                cedar.Briefing, cedar.PathFromCamp("C3").ConvertAll(n => new NodeSpec(n.Id, n.ParentId, n.Depth, n.Depth, 1, 0))
+                    .Prepend(cedar.Get("Camp")).ToList(), null,
                 new[] { new IntelReportSpec(2, "C3", 2, null, "Rockfall cleared.") });
             var sim = new RescueSimulation(legacy);
             sim.Submit(Scenarios.Plan("C3", 2));
@@ -212,19 +265,19 @@ namespace CLSR.Offline.Tests
             Assert.True(day1.BranchReportsPending, "Cedar correction arrives after day 1");
             Assert.Equal(0, day1.RouteReports.Count, "correction waits for the separate report screen");
             Assert.Equal(0, sim.ReleasedReports.Count, "the AI has not received the correction");
-            Assert.Equal(5, sim.View().Get("R1").BranchEstimate, "River Road before acknowledgment");
+            Assert.Equal(6, sim.View().Get("R1").BranchEstimate, "River Road before acknowledgment");
             Assert.Equal(1, sim.View().Get("C1").BranchEstimate, "Cliff Pass before acknowledgment");
             Assert.Equal(PlanError.PendingBranchReports, sim.Validate(Scenarios.Plan()), "Day 2 planning waits");
             string message = sim.PendingBranchReportMessages()[0];
-            Assert.True(message.Contains("River Road: 5 → 1") && message.Contains("Cliff Pass: 1 → 4"), "both estimate changes listed");
+            Assert.True(message.Contains("River Road: 6 → 4") && message.Contains("Cliff Pass: 1 → 7"), "both estimate changes listed");
             sim.AcknowledgeBranchReports();
-            Assert.Equal(1, sim.View().Get("R1").BranchEstimate, "River Road after acknowledgment");
-            Assert.Equal(4, sim.View().Get("C1").BranchEstimate, "Cliff Pass after acknowledgment");
-            Assert.Equal(3, sim.View().Get("C3").KnownDifficulty, "report leaves the revealed threshold at three");
+            Assert.Equal(4, sim.View().Get("R1").BranchEstimate, "River Road after acknowledgment");
+            Assert.Equal(7, sim.View().Get("C1").BranchEstimate, "Cliff Pass after acknowledgment");
+            Assert.Equal(1, sim.View().Get("C3").KnownDifficulty, "report preserves local crossing cost");
             Assert.Equal(0, sim.Submit(Scenarios.Plan()).RouteReports.Count, "no Day 2 access report");
             Assert.Equal("C3", sim.Submit(Scenarios.Plan("C3", 2)).Expeditions[0].StoppedAt, "C3 still requires three on Day 3");
             sim.Reset();
-            Assert.Equal(5, sim.View().Get("R1").BranchEstimate, "restart restores River Road estimate");
+            Assert.Equal(6, sim.View().Get("R1").BranchEstimate, "restart restores River Road estimate");
             Assert.Equal(1, sim.View().Get("C1").BranchEstimate, "restart restores Cliff Pass estimate");
             Assert.Equal(0, sim.ReleasedReports.Count, "restart clears report history");
         }
@@ -238,9 +291,9 @@ namespace CLSR.Offline.Tests
             Assert.Equal(PlanError.PendingBranchReports, sim.Validate(Scenarios.Plan()), "planning blocked");
             Assert.Equal(5, sim.View().Get("North Pass").BranchEstimate, "old estimate until acknowledged");
             string message = sim.PendingBranchReportMessages()[0];
-            Assert.True(message.Contains("North Pass: 5 → 1"), "message lists the change: " + message);
+            Assert.True(message.Contains("North Pass: 5 → 3"), "message lists the change: " + message);
             sim.AcknowledgeBranchReports();
-            Assert.Equal(1, sim.View().Get("North Pass").BranchEstimate, "revised estimate");
+            Assert.Equal(3, sim.View().Get("North Pass").BranchEstimate, "revised estimate");
             Assert.True(sim.View().Get("North Pass").BranchEstimateRevised, "marked revised");
             Assert.Equal(1, sim.ReleasedReports.Count, "released once acknowledged");
         }

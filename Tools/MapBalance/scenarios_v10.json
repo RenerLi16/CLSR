@@ -1,0 +1,377 @@
+{
+  "mode": "cumulative",
+  "scenarios": {
+    "Cedar Valley": {
+      "name": "Cedar Valley",
+      "days": 3,
+      "pool": 10,
+      "cap": 5,
+      "mex": 2,
+      "branches": [
+        {
+          "name": "North Ridge",
+          "root": "N1",
+          "reported": 4,
+          "note": "Supply cache at N3 grants +5 next day. Both far sites are roughly three points from camp."
+        },
+        {
+          "name": "West Woods",
+          "root": "W1",
+          "reported": 5,
+          "note": "No cache. Trail crews expect the two outer approaches to differ in cost."
+        },
+        {
+          "name": "River Road",
+          "root": "R1",
+          "reported": 6,
+          "note": "No cache. The river forks lead to a shorter spur and a longer approach.",
+          "revised": 4
+        },
+        {
+          "name": "Cliff Pass",
+          "root": "C1",
+          "reported": 1,
+          "note": "No storage · about 3 points to the upper pass",
+          "revised": 7
+        }
+      ],
+      "report": {
+        "after_day": 1,
+        "message": "Second-pass aerial sweep: the River Road count included a supply column already recounted at camp. The Cliff Pass sweep missed a large group holding in the upper pass."
+      },
+      "nodes": [
+        {
+          "id": "Camp",
+          "parent": "",
+          "depth": 0,
+          "cost": 0,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "N1",
+          "parent": "Camp",
+          "depth": 1,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "N2",
+          "parent": "N1",
+          "depth": 2,
+          "cost": 1,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "N3",
+          "parent": "N2",
+          "depth": 3,
+          "cost": 1,
+          "surv": 2,
+          "cache": 5
+        },
+        {
+          "id": "N4",
+          "parent": "N2",
+          "depth": 3,
+          "cost": 2,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "W1",
+          "parent": "Camp",
+          "depth": 1,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "W2",
+          "parent": "W1",
+          "depth": 2,
+          "cost": 1,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "W3",
+          "parent": "W2",
+          "depth": 3,
+          "cost": 1,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "W4",
+          "parent": "W2",
+          "depth": 3,
+          "cost": 2,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "R1",
+          "parent": "Camp",
+          "depth": 1,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "R2",
+          "parent": "R1",
+          "depth": 2,
+          "cost": 1,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "R3",
+          "parent": "R2",
+          "depth": 3,
+          "cost": 1,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "R4",
+          "parent": "R2",
+          "depth": 3,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "R5",
+          "parent": "R4",
+          "depth": 4,
+          "cost": 2,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "C1",
+          "parent": "Camp",
+          "depth": 1,
+          "cost": 1,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "C2",
+          "parent": "C1",
+          "depth": 2,
+          "cost": 1,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "C3",
+          "parent": "C2",
+          "depth": 3,
+          "cost": 1,
+          "surv": 4,
+          "cache": 0
+        }
+      ],
+      "briefing": "Every point a team carries is spent crossing the trail. A team keeps walking while it can still pay the next stretch, and stops where it runs out. The storage camp at N3 supplies points the day after a team passes it."
+    },
+    "Blackridge Storm Rescue": {
+      "name": "Blackridge Storm Rescue",
+      "days": 3,
+      "pool": 10,
+      "cap": 5,
+      "mex": 2,
+      "branches": [
+        {
+          "name": "West Fork",
+          "root": "West Fork",
+          "reported": 3,
+          "note": "Supply cache at Creek Shelter grants +5 next day. The lookout is farther along the other trail."
+        },
+        {
+          "name": "North Pass",
+          "root": "North Pass",
+          "reported": 5,
+          "note": "No cache. The summit is the longest approach in the pass.",
+          "revised": 3
+        },
+        {
+          "name": "Lake Fork",
+          "root": "Lake Fork",
+          "reported": 4,
+          "note": "No cache. The two outer sites are equally deep, but the approaches may differ in cost."
+        },
+        {
+          "name": "South Spur",
+          "root": "South Spur",
+          "reported": 1,
+          "note": "No cache. The ridge route extends beyond Slide Zone.",
+          "revised": 8
+        }
+      ],
+      "report": {
+        "after_day": 1,
+        "message": "Second-pass aerial sweep: the North Pass count included a packing crew that had already evacuated. The South Spur count missed a group holding near Ridge Cache."
+      },
+      "nodes": [
+        {
+          "id": "Camp",
+          "parent": "",
+          "depth": 0,
+          "cost": 0,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "West Fork",
+          "parent": "Camp",
+          "depth": 1,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "Fallen Timber Trail",
+          "parent": "West Fork",
+          "depth": 2,
+          "cost": 1,
+          "surv": 3,
+          "cache": 0
+        },
+        {
+          "id": "Fire Lookout",
+          "parent": "Fallen Timber Trail",
+          "depth": 3,
+          "cost": 1,
+          "surv": 3,
+          "cache": 0
+        },
+        {
+          "id": "Creek Shelter",
+          "parent": "West Fork",
+          "depth": 2,
+          "cost": 1,
+          "surv": 2,
+          "cache": 5
+        },
+        {
+          "id": "North Pass",
+          "parent": "Camp",
+          "depth": 1,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "Rockslide Gate",
+          "parent": "North Pass",
+          "depth": 2,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "Upper Ridge",
+          "parent": "Rockslide Gate",
+          "depth": 3,
+          "cost": 1,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "Summit Cabin",
+          "parent": "Upper Ridge",
+          "depth": 4,
+          "cost": 2,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "Miner's Hut",
+          "parent": "Rockslide Gate",
+          "depth": 3,
+          "cost": 1,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "Lake Fork",
+          "parent": "Camp",
+          "depth": 1,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "Flooded Causeway",
+          "parent": "Lake Fork",
+          "depth": 2,
+          "cost": 1,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "Lakeside Camp",
+          "parent": "Flooded Causeway",
+          "depth": 3,
+          "cost": 2,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "Weather Station",
+          "parent": "Flooded Causeway",
+          "depth": 3,
+          "cost": 1,
+          "surv": 4,
+          "cache": 0
+        },
+        {
+          "id": "South Spur",
+          "parent": "Camp",
+          "depth": 1,
+          "cost": 1,
+          "surv": 1,
+          "cache": 0
+        },
+        {
+          "id": "Timber Cut",
+          "parent": "South Spur",
+          "depth": 2,
+          "cost": 1,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "Gravel Pit",
+          "parent": "Timber Cut",
+          "depth": 3,
+          "cost": 1,
+          "surv": 2,
+          "cache": 0
+        },
+        {
+          "id": "Slide Zone",
+          "parent": "Timber Cut",
+          "depth": 3,
+          "cost": 1,
+          "surv": 0,
+          "cache": 0
+        },
+        {
+          "id": "Ridge Cache",
+          "parent": "Slide Zone",
+          "depth": 4,
+          "cost": 1,
+          "surv": 2,
+          "cache": 0
+        }
+      ],
+      "briefing": "Every point a team carries is spent crossing the trail. A team keeps walking while it can still pay the next stretch, and stops where it runs out. The cache at Creek Shelter supplies points the day after a team passes it."
+    }
+  }
+}

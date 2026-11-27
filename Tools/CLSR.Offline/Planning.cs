@@ -51,6 +51,7 @@ namespace CLSR.Offline
         public int Days;
         public int DailyCap;
         public int MaxExpeditions;
+        public bool CumulativeCosts;
 
         public static World FromTruth(ScenarioSpec spec)
         {
@@ -64,6 +65,7 @@ namespace CLSR.Offline
                 world.Cache[i] = node.CacheReward;
                 for (int d = 0; d < spec.TotalDays; d++) world.Difficulty[d, i] = node.Difficulty;
             }
+            world.CumulativeCosts = spec.CumulativeCosts;
             // Reports change thresholds from the day after they are scheduled.
             foreach (IntelReportSpec report in spec.Reports)
             {
@@ -101,7 +103,8 @@ namespace CLSR.Offline
         public int Needed(int day, int i)
         {
             int need = 0;
-            foreach (int n in Paths[i]) need = Math.Max(need, Difficulty[day, n]);
+            foreach (int n in Paths[i])
+                need = CumulativeCosts ? need + Difficulty[day, n] : Math.Max(need, Difficulty[day, n]);
             return need;
         }
 
@@ -112,6 +115,7 @@ namespace CLSR.Offline
             foreach (int n in Paths[target])
             {
                 if (points < Difficulty[day, n]) break;
+                if (CumulativeCosts) points -= Difficulty[day, n];
                 long bit = 1L << n;
                 if ((rescued & bit) == 0 && Survivors[n] > 0)
                 {
@@ -130,8 +134,8 @@ namespace CLSR.Offline
 
     /// <summary>
     /// Exact full-information optimum by exhaustive search with memoisation.
-    /// With known thresholds an expedition never needs more than the largest
-    /// threshold on its path, and sending fewer is dominated by a shorter route,
+    /// With known costs a team can pay exactly what its chosen route requires.
+    /// Underfunding reaches a prefix that can be targeted directly,
     /// so each target has one useful allocation per day. Supports up to two
     /// expeditions per day (the current study rule).
     /// </summary>

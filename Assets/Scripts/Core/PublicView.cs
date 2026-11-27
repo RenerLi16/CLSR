@@ -57,6 +57,7 @@ namespace CLSR.Simulation
         public int Pool;
         public int DailyCap;
         public int MaxExpeditions;
+        public bool CumulativeCosts;
         public int PendingPoints;
         public int PointsGranted;
         public int TotalRescued;
@@ -107,6 +108,7 @@ namespace CLSR.Simulation
                 Pool = sim.Pool,
                 DailyCap = spec.DailyCap,
                 MaxExpeditions = spec.MaxExpeditions,
+                CumulativeCosts = spec.CumulativeCosts,
                 PendingPoints = sim.PendingPoints,
                 PointsGranted = sim.PointsGranted,
                 TotalRescued = sim.TotalRescued,

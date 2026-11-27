@@ -26,6 +26,13 @@ public static class ReviewSupportHarness
         try
         {
             Check(PlayerSettings.insecureHttpOption == InsecureHttpOption.DevelopmentOnly, "development-only HTTP");
+            EditorSceneManager.OpenScene("Assets/Scenes/BlackridgeStorm.unity");
+            var blackridge = UnityEngine.Object.FindAnyObjectByType<ScenarioController>();
+            Invoke(blackridge, "LoadScenario");
+            Check(blackridge.IsReady && blackridge.Spec.CumulativeCosts, "Blackridge scenario initialized");
+            var trial = blackridge.Simulation.Submit(new[] { new CLSR.Simulation.Leg("Summit Cabin", 4) });
+            Check(trial.Expeditions[0].StoppedAt == "Summit Cabin" &&
+                  trial.Expeditions[0].RequiredPoints == 1, "Blackridge summit costs five from camp");
             EditorSceneManager.OpenScene("Assets/Scenes/CedarValley.unity");
             var game = UnityEngine.Object.FindAnyObjectByType<RescueGameController>();
             var scenario = game.GetComponent<ScenarioController>();
@@ -49,19 +56,19 @@ public static class ReviewSupportHarness
             var cliff = scenario.CurrentScenario.branches.Single(branch => branch.rootNodeId == "C1");
             Check(scenario.HasPendingBranchReports, "Cedar correction queued after Day 1");
             Check(!game.TrySetPlan(Plan("W2", 2)), "cannot dispatch before acknowledging the report");
-            Check(scenario.GetBranchEstimate(river) == 5 && scenario.GetBranchEstimate(cliff) == 1,
+            Check(scenario.GetBranchEstimate(river) == 6 && scenario.GetBranchEstimate(cliff) == 1,
                 "old estimates visible before acknowledgment");
             Emit("pending", ReviewSupportSnapshot.Build(Direct, scenario, game, empty, judgments, caches));
             scenario.AcknowledgeBranchReports();
-            Check(scenario.GetBranchEstimate(river) == 1 && scenario.GetBranchEstimate(cliff) == 4,
+            Check(scenario.GetBranchEstimate(river) == 4 && scenario.GetBranchEstimate(cliff) == 7,
                 "board reflects the correction after acknowledgment");
             Emit("day2", ReviewSupportSnapshot.Build(Direct, scenario, game, empty, judgments, caches));
-            Check(game.TrySetPlan(Plan("W2", 2)), "cache test plan accepted");
+            Check(game.TrySetPlan(Plan("N3", 3)), "cache test plan accepted");
             game.ConfirmPlan();
             dissentPayload = ReviewSupportSnapshot.Build(Dissent, scenario, game, empty, judgments, caches);
             Emit("day3", dissentPayload);
             game.RestartGame();
-            Check(scenario.GetBranchEstimate(river) == 5 && scenario.GetBranchEstimate(cliff) == 1,
+            Check(scenario.GetBranchEstimate(river) == 6 && scenario.GetBranchEstimate(cliff) == 1,
                 "restart restores initial estimates");
             Emit("reset", ReviewSupportSnapshot.Build(Direct, scenario, game, empty, judgments, caches));
 

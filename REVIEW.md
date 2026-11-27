@@ -18,17 +18,19 @@ shared screen for private forms. A reviewer can also step through alone with fic
 or blank answers. There is one unscored practice dispatch and then two three-round
 draft scenarios, Cedar Valley and Blackridge, in either order.
 
+The [map balance review](Tools/MapBalance/README.md) covers the revised routes and the proposed private telescope observations. The Unity preview currently uses the existing observation phase.
+
 ## What this preview demonstrates
 
-- Each formal scenario starts with nine logistics points. Up to four points and
+- Each formal scenario starts with ten logistics points. Up to five points and
   two expeditions can be allocated per simulated day. Used points are spent,
   even on a blocked expedition; unused points carry over.
 - An expedition follows one path from base camp. Every node it can reach is
-  searched; if it is blocked, it sees the blocking threshold only. Each occupied
+  searched. Each site deducts its local crossing cost from the expedition’s remaining points. A blocked team learns the crossing cost and its shortfall. Each occupied
   site can hold multiple survivors. Reaching a junction reveals separate totals for each
   immediately connected child branch; unreached sites still hide exact survivor
   locations and difficulty unless the expedition was blocked there. Caches add points on the following day.
-  Blackridge has a cache at Creek Shelter. Both formal maps revise their survivor estimates after Day 1.
+  Cedar has a +5 cache at N3 and Blackridge has a +5 cache at Creek Shelter. Both formal maps revise their survivor estimates after Day 1.
   The team acknowledges the correction before planning Day 2.
 - Daily flow: observe, three private initial judgments, initial discussion and
   provisional plan, one sample or neutral message, further discussion, final plan,

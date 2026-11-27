@@ -55,7 +55,12 @@ def validate_request(request):
     require(request["version"] == VERSION)
     require(request["condition"] in (DIRECT, DISSENT, NO_AI))
     context = request["context"]
-    fields(context, "day", "total_days", "points_available", "daily_cap",
+    require(type(context) is dict)
+    optional = []
+    if "cumulative_costs" in context:
+        require(type(context["cumulative_costs"]) is bool)
+        optional.append("cumulative_costs")
+    fields(context, *optional, "day", "total_days", "points_available", "daily_cap",
            "max_expeditions", "sites", "released_route_reports",
            "provisional_plan", "initial_judgments")
     integer(context["total_days"], 1, 14)
@@ -150,7 +155,7 @@ def build_mock_response(request):
         plan = context["provisional_plan"]
         options = ", ".join(f"{leg['points']} LP to {leg['target']}" for leg in plan)
         if plan:
-            message = f"Test recommendation: send {options}. Unknown thresholds could still stop an expedition."
+            message = f"Test recommendation: send {options}. Unknown route difficulties could still stop an expedition."
         else:
             message = "Test recommendation: launch no expeditions and retain today's unspent points."
     else:

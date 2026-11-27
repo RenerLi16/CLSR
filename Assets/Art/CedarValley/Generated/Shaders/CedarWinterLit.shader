@@ -67,6 +67,7 @@ Shader "CLSR/Winter Lit"
 
             half4 frag (v2f i) : SV_Target
             {
+                TelescopeSightlineClip(i.wpos);
                 half3 n = normalize(i.wn);
                 float2 uv = lerp(i.uv, i.wpos.xz / _MainTile, _MainWorld);
                 half3 d = tex2D(_MainTex, uv).rgb * i.col.rgb * _Color.rgb;
@@ -92,9 +93,10 @@ Shader "CLSR/Winter Lit"
             #pragma fragment frag
             #pragma multi_compile_shadowcaster
             #include "UnityCG.cginc"
-            struct v2f { V2F_SHADOW_CASTER; };
-            v2f vert (appdata_base v) { v2f o; TRANSFER_SHADOW_CASTER_NORMALOFFSET(o) return o; }
-            float4 frag (v2f i) : SV_Target { SHADOW_CASTER_FRAGMENT(i) }
+            #include "CedarTelescopeClip.cginc"
+            struct v2f { V2F_SHADOW_CASTER; float3 wpos : TEXCOORD1; };
+            v2f vert (appdata_base v) { v2f o; TRANSFER_SHADOW_CASTER_NORMALOFFSET(o) o.wpos = mul(unity_ObjectToWorld, v.vertex).xyz; return o; }
+            float4 frag (v2f i) : SV_Target { TelescopeSightlineClip(i.wpos); SHADOW_CASTER_FRAGMENT(i) }
             ENDCG
         }
     }

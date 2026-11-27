@@ -115,12 +115,12 @@ public sealed partial class ReviewStudyFlow
 
         if (provisional.Count > 0)
             return "I recommend " + Describe(provisional) +
-                ". This concentrates on the team’s selected destinations and fits the visible budget. Unrevealed thresholds could still block the route.";
+                ". This concentrates on the team’s selected destinations and fits the visible budget. Unrevealed route difficulties could still block the route.";
 
         var report = scenario.CurrentScenario.branches.OrderByDescending(scenario.GetBranchEstimate).FirstOrDefault();
         string root = report?.rootNodeId ??
             scenario.CurrentScenario.nodes.First(n => n.parentNodeId == "Camp").nodeId;
-        return $"I recommend sending 1 LP toward {root} to test its access threshold. " +
+        return $"I recommend sending 1 LP toward {root} to test its access difficulty. " +
             "That uses little of the remaining pool, but it does not guarantee a rescue.";
     }
 }

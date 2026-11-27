@@ -195,7 +195,7 @@ namespace CLSR.Offline
             // Field defaults mirror RescueScenarioData's initialisers.
             return new ScenarioSpec(Str(map, "scenarioName"), Int(map, "totalDays", 3),
                 Int(map, "totalLogisticsPoints", 9), Int(map, "dailyDeploymentCap", 4),
-                Int(map, "maxExpeditionsPerDay", 2), Str(map, "briefing"), nodes, branches, reports);
+                Int(map, "maxExpeditionsPerDay", 2), Str(map, "briefing"), nodes, branches, reports, Int(map, "cumulativeCosts") != 0);
         }
     }
 }

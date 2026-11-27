@@ -10,7 +10,7 @@ knowledge of the hidden map — a ceiling no player can be expected to reach.
 | Agent | Strategy |
 | --- | --- |
 | `random` | Uniformly random legal plan (including sending nobody). |
-| `greedy-rescue` | Maximises today's expected rescues from branch reports and revealed counts (thresholds guessed = depth); ties use fewer points. |
+| `greedy-rescue` | Maximises today's expected rescues from branch reports and revealed counts (unknown crossings estimated at one point on cumulative maps); ties use fewer points. |
 | `explorer` | Maximises newly revealed thresholds and counts per day; rescues only break ties. |
 | `cache-aware` | Greedy rescue plus 0.5 survivor-equivalents per storage point while later days remain. |
 | `risk-aware` | Today's mean rescues over sampled thresholds/placements, minus 0.5 per point lost on blocked teams. |
@@ -48,61 +48,61 @@ Authored-map plans:
 
 ## Blackridge Storm Rescue
 
-Authored map: 18 survivors; full-information optimum 11. Oracle mean over variants: 13.71.
+Authored map: 26 survivors; full-information optimum 18. Oracle mean over variants: 21.74.
 
-Day-1 decision landscape (authored map, full information afterwards): 991 legal plans; 5 (0.5%) keep the optimum 11 reachable, 63 (6.4%) stay within one survivor; median 8, worst 7.
+Day-1 decision landscape (authored map, full information afterwards): 1621 legal plans; 255 (15.7%) keep the optimum 18 reachable, 362 (22.3%) stay within one survivor; median 16, worst 16.
 
 | Agent | Authored | Variants mean ± sd | min–max | % of oracle | LP spent | LP on blocked teams | Thresholds revealed | Caches |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `random` | 2.7 | 5.21 ± 2.18 | 0–12 | 38% | 8.7 | 3.9 | 7.3 | 0.1 |
-| `greedy-rescue` | 7 | 8.81 ± 1.77 | 4–12 | 65% | 9.0 | 0.0 | 9.0 | 0.0 |
-| `explorer` | 6 | 8.49 ± 1.81 | 5–14 | 62% | 9.0 | 7.0 | 13.0 | 0.0 |
-| `cache-aware` | 6 | 10.34 ± 2.24 | 5–16 | 75% | 10.0 | 0.0 | 9.5 | 1.0 |
-| `risk-aware` | 6 | 8.53 ± 2.07 | 4–13 | 62% | 9.1 | 0.3 | 9.4 | 0.2 |
-| `lookahead` | 4 | 7.32 ± 1.90 | 3–11 | 53% | 8.1 | 3.4 | 10.0 | 0.1 |
+| `random` | 4.0 | 8.06 ± 3.10 | 0–19 | 37% | 10.0 | 4.0 | 7.5 | 0.1 |
+| `greedy-rescue` | 8 | 12.32 ± 2.53 | 8–18 | 56% | 10.0 | 3.0 | 9.8 | 0.0 |
+| `explorer` | 8 | 14.08 ± 2.53 | 8–21 | 65% | 10.0 | 10.0 | 14.0 | 0.0 |
+| `cache-aware` | 15 | 18.34 ± 2.45 | 9–24 | 84% | 15.0 | 1.3 | 12.5 | 1.0 |
+| `risk-aware` | 10 | 11.40 ± 2.53 | 6–20 | 52% | 10.2 | 0.8 | 9.1 | 0.0 |
+| `lookahead` | 13 | 17.64 ± 2.31 | 12–23 | 81% | 15.0 | 4.5 | 13.0 | 1.0 |
 
 Paired comparisons over the same variants (wins / ties / losses for the first agent):
 
-- `greedy-rescue` vs `explorer`: 45 / 24 / 32; mean difference +0.33 (SE 0.16)
-- `greedy-rescue` vs `cache-aware`: 15 / 10 / 76; mean difference -1.50 (SE 0.19)
-- `greedy-rescue` vs `risk-aware`: 49 / 21 / 31; mean difference +0.29 (SE 0.18)
-- `greedy-rescue` vs `lookahead`: 75 / 16 / 10; mean difference +1.50 (SE 0.16)
+- `greedy-rescue` vs `explorer`: 9 / 15 / 77; mean difference -1.74 (SE 0.18)
+- `greedy-rescue` vs `cache-aware`: 0 / 0 / 101; mean difference -6.03 (SE 0.20)
+- `greedy-rescue` vs `risk-aware`: 63 / 16 / 22; mean difference +0.89 (SE 0.17)
+- `greedy-rescue` vs `lookahead`: 0 / 0 / 101; mean difference -5.32 (SE 0.16)
 
 Authored-map plans:
 
-- `greedy-rescue` (7): D1: 4 LP to Summit Cabin | D2: 4 LP to Ridge Cache | D3: 1 LP to West Fork
-- `explorer` (6): D1: 1 LP to Fallen Timber Trail, 3 LP to Summit Cabin | D2: 2 LP to Lakeside Camp, 2 LP to Gravel Pit | D3: 1 LP to Creek Shelter
-- `cache-aware` (6): D1: 2 LP to Creek Shelter, 2 LP to Rockslide Gate | D2: 3 LP to Fire Lookout, 1 LP to South Spur | D3: 2 LP to Flooded Causeway
-- `risk-aware` (6): D1: 4 LP to Summit Cabin | D2: 1 LP to Creek Shelter, 3 LP to Gravel Pit | D3: 1 LP to Lake Fork
-- `lookahead` (4): D1: 4 LP to Summit Cabin | D2: none | D3: 1 LP to Creek Shelter, 3 LP to Ridge Cache
+- `greedy-rescue` (8): D1: 2 LP to Rockslide Gate, 3 LP to Lakeside Camp | D2: 3 LP to Weather Station, 2 LP to Timber Cut | D3: none
+- `explorer` (8): D1: 3 LP to Summit Cabin, 2 LP to Lakeside Camp | D2: 2 LP to Fire Lookout, 3 LP to Ridge Cache | D3: none
+- `cache-aware` (15): D1: 2 LP to Creek Shelter, 3 LP to Upper Ridge | D2: 3 LP to Fire Lookout, 2 LP to Timber Cut | D3: 3 LP to Miner's Hut, 2 LP to Flooded Causeway
+- `risk-aware` (10): D1: 2 LP to Rockslide Gate, 3 LP to Weather Station | D2: 5 LP to Ridge Cache | D3: none
+- `lookahead` (13): D1: 4 LP to Summit Cabin, 1 LP to Weather Station | D2: 3 LP to Creek Shelter, 2 LP to Gravel Pit | D3: 3 LP to Fire Lookout, 2 LP to Weather Station
 
 ## Cedar Valley
 
-Authored map: 10 survivors; full-information optimum 9. Oracle mean over variants: 8.55.
+Authored map: 21 survivors; full-information optimum 14. Oracle mean over variants: 17.28.
 
-Day-1 decision landscape (authored map, full information afterwards): 785 legal plans; 20 (2.5%) keep the optimum 9 reachable, 246 (31.3%) stay within one survivor; median 7, worst 6.
+Day-1 decision landscape (authored map, full information afterwards): 1281 legal plans; 179 (14.0%) keep the optimum 14 reachable, 227 (17.7%) stay within one survivor; median 12, worst 12.
 
 | Agent | Authored | Variants mean ± sd | min–max | % of oracle | LP spent | LP on blocked teams | Thresholds revealed | Caches |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `random` | 3.0 | 3.09 ± 1.58 | 0–9 | 36% | 8.9 | 4.6 | 7.0 | 0.4 |
-| `greedy-rescue` | 7 | 6.03 ± 1.23 | 3–10 | 71% | 9.6 | 0.1 | 8.6 | 0.6 |
-| `explorer` | 6 | 5.32 ± 1.29 | 2–9 | 62% | 10.0 | 8.9 | 11.4 | 1.0 |
-| `cache-aware` | 6 | 5.46 ± 1.28 | 3–9 | 63% | 9.6 | 1.6 | 8.7 | 1.0 |
-| `risk-aware` | 7 | 6.01 ± 1.42 | 2–10 | 70% | 9.3 | 0.6 | 8.9 | 0.5 |
-| `lookahead` | 6 | 6.32 ± 1.59 | 1–10 | 74% | 9.5 | 3.2 | 10.6 | 0.6 |
+| `random` | 3.8 | 7.06 ± 2.70 | 0–18 | 41% | 9.9 | 4.0 | 7.2 | 0.1 |
+| `greedy-rescue` | 11 | 14.13 ± 1.92 | 11–19 | 82% | 10.0 | 0.0 | 10.0 | 0.0 |
+| `explorer` | 10 | 13.92 ± 1.95 | 9–19 | 80% | 10.0 | 7.0 | 13.0 | 0.0 |
+| `cache-aware` | 12 | 15.28 ± 1.99 | 9–20 | 88% | 13.4 | 2.6 | 11.2 | 1.0 |
+| `risk-aware` | 9 | 12.16 ± 1.89 | 7–17 | 70% | 10.0 | 1.4 | 8.9 | 0.0 |
+| `lookahead` | 12 | 14.94 ± 2.12 | 10–19 | 86% | 14.9 | 8.2 | 12.9 | 1.0 |
 
 Paired comparisons over the same variants (wins / ties / losses for the first agent):
 
-- `greedy-rescue` vs `explorer`: 60 / 35 / 6; mean difference +0.71 (SE 0.10)
-- `greedy-rescue` vs `cache-aware`: 59 / 31 / 11; mean difference +0.57 (SE 0.12)
-- `greedy-rescue` vs `risk-aware`: 28 / 42 / 31; mean difference +0.02 (SE 0.11)
-- `greedy-rescue` vs `lookahead`: 32 / 26 / 43; mean difference -0.28 (SE 0.16)
+- `greedy-rescue` vs `explorer`: 39 / 38 / 24; mean difference +0.22 (SE 0.12)
+- `greedy-rescue` vs `cache-aware`: 15 / 22 / 64; mean difference -1.15 (SE 0.17)
+- `greedy-rescue` vs `risk-aware`: 86 / 12 / 3; mean difference +1.97 (SE 0.15)
+- `greedy-rescue` vs `lookahead`: 24 / 20 / 57; mean difference -0.81 (SE 0.18)
 
 Authored-map plans:
 
-- `greedy-rescue` (7): D1: 1 LP to R1, 3 LP to C3 | D2: 1 LP to N1, 3 LP to W3 | D3: 2 LP to R2
-- `explorer` (6): D1: 2 LP to W3, 2 LP to R3 | D2: 2 LP to N3, 2 LP to C3 | D3: 2 LP to C3
-- `cache-aware` (6): D1: 2 LP to W2, 2 LP to R2 | D2: 1 LP to N1, 3 LP to C3 | D3: 2 LP to N2
-- `risk-aware` (7): D1: 4 LP to R5 | D2: 1 LP to W1, 3 LP to C3 | D3: 1 LP to N1
-- `lookahead` (6): D1: 4 LP to R5 | D2: 3 LP to N3, 1 LP to W4 | D3: 1 LP to C3
+- `greedy-rescue` (11): D1: 3 LP to W3, 2 LP to R2 | D2: 2 LP to N2, 3 LP to C3 | D3: none
+- `explorer` (10): D1: 2 LP to W3, 3 LP to R5 | D2: 2 LP to N3, 3 LP to C3 | D3: none
+- `cache-aware` (12): D1: 3 LP to N3, 2 LP to W2 | D2: 2 LP to R2, 3 LP to C3 | D3: 3 LP to N4
+- `risk-aware` (9): D1: 3 LP to W4, 2 LP to R2 | D2: 1 LP to N1, 4 LP to C3 | D3: none
+- `lookahead` (12): D1: 4 LP to R5, 1 LP to C3 | D2: 4 LP to N3, 1 LP to W4 | D3: 2 LP to W4, 3 LP to C3
 

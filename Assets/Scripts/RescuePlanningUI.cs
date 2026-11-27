@@ -255,7 +255,7 @@ public class RescuePlanningUI : MonoBehaviour
         if (!node.reached)
         {
             return
-                "Status: <b>Blocked · needs " + node.difficulty + " points</b>" +
+                "Status: <b>Blocked · " + (scenarioController.Spec.CumulativeCosts ? "crossing cost " : "needs ") + node.difficulty + " points</b>" +
                 "\nPoints assigned: <b>" +
                 assignedGroups +
                 "</b>";

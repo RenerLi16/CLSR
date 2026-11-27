@@ -60,6 +60,7 @@ Shader "CLSR/Winter Foliage"
 
             half4 frag (v2f i) : SV_Target
             {
+                TelescopeSightlineClip(i.wpos);
                 half4 t = tex2D(_MainTex, i.uv);
                 clip(t.a - _Cutoff);
                 half3 n = normalize(i.wn);
@@ -83,11 +84,12 @@ Shader "CLSR/Winter Foliage"
             #pragma fragment frag
             #pragma multi_compile_shadowcaster
             #include "UnityCG.cginc"
+            #include "CedarTelescopeClip.cginc"
             sampler2D _MainTex;
             half _Cutoff;
-            struct v2f { V2F_SHADOW_CASTER; float2 uv : TEXCOORD1; };
-            v2f vert (appdata_base v) { v2f o; TRANSFER_SHADOW_CASTER_NORMALOFFSET(o) o.uv = v.texcoord.xy; return o; }
-            float4 frag (v2f i) : SV_Target { clip(tex2D(_MainTex, i.uv).a - _Cutoff); SHADOW_CASTER_FRAGMENT(i) }
+            struct v2f { V2F_SHADOW_CASTER; float2 uv : TEXCOORD1; float3 wpos : TEXCOORD2; };
+            v2f vert (appdata_base v) { v2f o; TRANSFER_SHADOW_CASTER_NORMALOFFSET(o) o.uv = v.texcoord.xy; o.wpos = mul(unity_ObjectToWorld, v.vertex).xyz; return o; }
+            float4 frag (v2f i) : SV_Target { TelescopeSightlineClip(i.wpos); clip(tex2D(_MainTex, i.uv).a - _Cutoff); SHADOW_CASTER_FRAGMENT(i) }
             ENDCG
         }
     }

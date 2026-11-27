@@ -33,6 +33,7 @@ namespace CLSR.Simulation
                 .Append(",\"points_available\":").Append(Number(view.Pool))
                 .Append(",\"daily_cap\":").Append(Number(view.DailyCap))
                 .Append(",\"max_expeditions\":").Append(Number(view.MaxExpeditions))
+                .Append(view.CumulativeCosts ? ",\"cumulative_costs\":true" : "")
                 .Append(",\"sites\":[");
 
             bool first = true;

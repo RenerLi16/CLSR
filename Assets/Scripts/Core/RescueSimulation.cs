@@ -38,7 +38,7 @@ namespace CLSR.Simulation
         public bool ReachedTarget;
         /// <summary>Node whose threshold stopped the team, or null.</summary>
         public string StoppedAt;
-        /// <summary>The blocking threshold; revealed to players.</summary>
+        /// <summary>Extra points needed at a blocked crossing, or the absolute threshold on legacy maps.</summary>
         public int RequiredPoints;
         public int Rescued;
         public int PointsEarned;
@@ -249,19 +249,21 @@ namespace CLSR.Simulation
             var result = new ExpeditionOutcome { Target = leg.Target, Points = leg.Points };
             List<NodeSpec> path = Scenario.PathFromCamp(leg.Target);
             string root = path.Count > 0 ? path[0].Id : "";
+            int remaining = leg.Points;
             foreach (NodeSpec node in path)
             {
-                int threshold = CurrentDifficulty(node.Id);
-                bool canPass = leg.Points >= threshold;
+                int difficulty = CurrentDifficulty(node.Id);
+                bool canPass = remaining >= difficulty;
                 explored.Add(node.Id);
                 result.Encountered.Add(node.Id);
                 if (!canPass)
                 {
                     result.StoppedAt = node.Id;
-                    result.RequiredPoints = threshold;
+                    result.RequiredPoints = Scenario.CumulativeCosts ? difficulty - remaining : difficulty;
                     return result;
                 }
 
+                if (Scenario.CumulativeCosts) remaining -= difficulty;
                 reached.Add(node.Id);
                 result.Reached.Add(node.Id);
                 if (node.Survivors > 0 && rescued.Add(node.Id))

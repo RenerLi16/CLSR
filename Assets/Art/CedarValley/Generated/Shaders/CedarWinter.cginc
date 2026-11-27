@@ -7,6 +7,7 @@
 // Globals are pushed by WinterAtmosphere; with no component every term falls back to neutral.
 #ifndef CEDAR_WINTER_INCLUDED
 #define CEDAR_WINTER_INCLUDED
+#include "CedarTelescopeClip.cginc"
 
 half4 _WinterHazeColor;   // rgb haze, a = unused
 float4 _WinterBoard;      // playable board rect in world XZ: x0, z0, x1, z1

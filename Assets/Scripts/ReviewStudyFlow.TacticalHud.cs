@@ -504,7 +504,7 @@ public sealed partial class ReviewStudyFlow
         }
 
         TacticalTextAt(new Rect(stats.x, stats.y, stats.width, 16f * s), "FIELD INTELLIGENCE", tacticalHeading, TacticalMuted);
-        DrawTacticalInspectorMetric(stats, 20f, "MINIMUM LP", Known(known?.KnownDifficulty));
+        DrawTacticalInspectorMetric(stats, 20f, scenario.Spec.CumulativeCosts ? "Crossing cost" : "MINIMUM LP", Known(known?.KnownDifficulty));
         DrawTacticalInspectorMetric(stats, 39f, "SURVIVORS HERE", Known(known?.KnownRemainingHere));
         bool frontier = known != null && !known.KnownRemainingBeyond.HasValue && known.KnownBranchRemaining.HasValue;
         DrawTacticalInspectorMetric(stats, 58f, frontier ? "BRANCH TOTAL" : "SURVIVORS BEYOND",

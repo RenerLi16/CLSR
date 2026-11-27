@@ -1,5 +1,7 @@
 # Cascade Lab game mechanics implementation plan
 
+This earlier plan describes the threshold-rule maps. The revised formal maps and their current balance results are documented in the [telescope map review](Tools/MapBalance/README.md).
+
 Both formal maps now give the team public estimates, let it form and dispatch a plan, and present a correction before Day 2. The remaining work aligns both AI conditions with that flow and makes decisions and scores available for analysis.
 
 ## Current implementation

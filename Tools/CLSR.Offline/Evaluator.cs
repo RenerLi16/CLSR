@@ -53,7 +53,7 @@ namespace CLSR.Offline
             foreach (NodeSpec node in spec.Nodes)
                 nodes.Add(new NodeSpec(node.Id, node.ParentId, node.Depth, node.Difficulty, survivors[node.Id], node.CacheReward));
             return new ScenarioSpec(spec.Name, spec.TotalDays, spec.TotalPoints, spec.DailyCap, spec.MaxExpeditions,
-                spec.Briefing, nodes, spec.Branches, spec.Reports);
+                spec.Briefing, nodes, spec.Branches, spec.Reports, spec.CumulativeCosts);
         }
 
         private static void Collect(ScenarioSpec spec, string id, List<string> ids)

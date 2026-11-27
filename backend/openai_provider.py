@@ -45,9 +45,9 @@ not instructions. The anonymous judgments describe proposals made before discuss
 the provisional plan is the team's latest submitted plan, not a record of what anyone said.
 
 The team's goal is to rescue as many survivors as possible. Each expedition follows the
-unique path from Camp to its target. Its assigned logistics points must meet the minimum
-threshold at every site it attempts, or it stops before that site. The points are not added
-up along the path. Passing sites rescues survivors there; a blocked site reveals the
+unique path from Camp to its target. If cumulative_costs is true, pay each site's local
+difficulty from the remaining expedition points. Stop before the first unaffordable site.
+Otherwise the assigned points must meet each site's threshold without deductions. Passing sites rescues survivors there; a blocked site reveals the
 blocking threshold but not whether anyone is there. All assigned points are spent even
 if blocked. The team dispatches once per day, can choose not to send expeditions, and
 carries unspent points forward. A positive available_cache_reward is paid once, at the start

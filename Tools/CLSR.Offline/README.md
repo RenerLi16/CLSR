@@ -39,7 +39,11 @@ Variants re-place each branch's true survivors at random while keeping the map, 
 caches and reports, to check that conclusions are not an artefact of one placement.
 None of these agents is a participant-facing AI condition.
 
-## Findings (100 variants per map, generated 2026-11-22)
+## Revised formal maps
+
+See the [map review and v10 acceptance results](../MapBalance/README.md) for the current authored routes, including how a private sighting can change the dispatch decision.
+
+## Historical findings for the threshold maps (2026-11-22)
 
 - **No simple rule dominates across the two study maps.** On Blackridge, `cache-aware` beats
   `greedy-rescue` on 76 of 101 variants (+1.50 survivors on average). On Cedar Valley it loses

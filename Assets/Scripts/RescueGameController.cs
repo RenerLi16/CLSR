@@ -256,7 +256,7 @@ public class RescueGameController : MonoBehaviour
             lastDayResults.Add(ExpeditionResult.From(expedition));
 
         scenarioController.SyncSceneFromSimulation();
-        LastDaySummary = BuildDaySummary(outcome);
+        LastDaySummary = BuildDaySummary(outcome, scenarioController.Spec.CumulativeCosts);
         Debug.Log("Day " + outcome.Day + " result: " + LastDaySummary);
 
         if (outcome.GameOver)
@@ -350,7 +350,7 @@ public class RescueGameController : MonoBehaviour
         );
     }
 
-    public static string BuildDaySummary(DayOutcome outcome)
+    public static string BuildDaySummary(DayOutcome outcome, bool cumulativeCosts = false)
     {
         if (outcome.Expeditions.Count == 0)
         {
@@ -372,7 +372,7 @@ public class RescueGameController : MonoBehaviour
                     result.Target +
                     " stopped at " +
                     result.StoppedAt +
-                    "; it needs " +
+                    (cumulativeCosts ? "; short by " : "; it needs ") +
                     result.RequiredPoints +
                     " points to pass." +
                     (result.Rescued > 0

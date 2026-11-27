@@ -89,9 +89,10 @@ namespace CLSR.Simulation
 
         public ScenarioSpec(string name, int totalDays, int totalPoints, int dailyCap, int maxExpeditions,
             string briefing, IReadOnlyList<NodeSpec> nodes, IReadOnlyList<BranchReportSpec> branches,
-            IReadOnlyList<IntelReportSpec> reports)
+            IReadOnlyList<IntelReportSpec> reports, bool cumulativeCosts = false)
         {
             Name = name ?? "";
+            CumulativeCosts = cumulativeCosts;
             TotalDays = totalDays;
             TotalPoints = totalPoints;
             DailyCap = dailyCap;
@@ -118,6 +119,7 @@ namespace CLSR.Simulation
         public string Name { get; }
         public int TotalDays { get; }
         public int TotalPoints { get; }
+        public bool CumulativeCosts { get; }
         public int DailyCap { get; }
         public int MaxExpeditions { get; }
         public string Briefing { get; }
@@ -211,7 +213,7 @@ namespace CLSR.Simulation
                     continue;
                 }
                 if (node.Depth != parent.Depth + 1) errors.Add("Node " + node.Id + " has an invalid depth.");
-                if (node.Difficulty < parent.Difficulty)
+                if (!CumulativeCosts && node.Difficulty < parent.Difficulty)
                     errors.Add("Difficulty decreases from " + parent.Id + " to " + node.Id + ".");
                 if (PathFromCamp(node.Id).Count == 0)
                     errors.Add("Node " + node.Id + " does not connect back to Camp.");
@@ -238,10 +240,10 @@ namespace CLSR.Simulation
                     }
                     // A revised threshold must keep requirements non-decreasing away from Camp.
                     NodeSpec parent = Get(node.ParentId);
-                    if (parent != null && parent.Id != CampId && report.NewDifficulty < parent.Difficulty)
+                    if (!CumulativeCosts && parent != null && parent.Id != CampId && report.NewDifficulty < parent.Difficulty)
                         errors.Add("Intelligence report makes " + node.Id + " easier than its parent.");
                     foreach (string child in ChildrenOf(node.Id))
-                        if (Get(child).Difficulty < report.NewDifficulty)
+                        if (!CumulativeCosts && Get(child).Difficulty < report.NewDifficulty)
                             errors.Add("Intelligence report makes " + node.Id + " harder than child " + child + ".");
                 }
                 foreach (EstimateRevisionSpec revision in report.Revisions)

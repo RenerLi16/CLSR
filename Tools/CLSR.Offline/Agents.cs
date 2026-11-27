@@ -84,8 +84,8 @@ namespace CLSR.Offline
             return bound;
         }
 
-        /// <summary>Point estimate: known value, else max(lower bound, depth) (thresholds track depth on these maps).</summary>
-        public int GuessDifficulty(PublicNode node) => node.KnownDifficulty ?? Math.Max(LowerBound(node.Id), node.Depth);
+        /// <summary>Estimate an undiscovered crossing at one point. Legacy maps use depth and known thresholds.</summary>
+        public int GuessDifficulty(PublicNode node) => node.KnownDifficulty ?? (view.CumulativeCosts ? 1 : Math.Max(LowerBound(node.Id), node.Depth));
 
         /// <summary>Expected rescues and new information if the plan's guessed thresholds hold.</summary>
         public (double rescue, int info, int cache) Score(IReadOnlyList<Leg> plan)
@@ -94,10 +94,13 @@ namespace CLSR.Offline
             var encountered = new HashSet<string>();
             foreach (Leg leg in plan)
             {
+                int remaining = leg.Points;
                 foreach (PublicNode node in view.PathFromCamp(leg.Target))
                 {
                     encountered.Add(node.Id);
-                    if (leg.Points < GuessDifficulty(node)) break;
+                    int cost = GuessDifficulty(node);
+                    if (remaining < cost) break;
+                    if (view.CumulativeCosts) remaining -= cost;
                     reached.Add(node.Id);
                 }
             }
@@ -130,7 +133,8 @@ namespace CLSR.Offline
                 world.Cache[i] = node.AvailableCacheReward ?? 0;
             }
 
-            // Thresholds: sample top-down so they stay non-decreasing along every path.
+            world.CumulativeCosts = view.CumulativeCosts;
+            // Legacy thresholds: sample top-down so they stay non-decreasing along every path.
             var sampledDifficulty = new Dictionary<string, int>();
             foreach (PublicNode root in Children(ScenarioSpec.CampId)) SampleDifficulty(root, 0, rng, sampledDifficulty);
             for (int i = 0; i < ids.Count; i++)
@@ -151,6 +155,7 @@ namespace CLSR.Offline
         {
             int value;
             if (node.KnownDifficulty.HasValue) value = node.KnownDifficulty.Value;
+            else if (view.CumulativeCosts) value = rng.NextDouble() < 0.25 ? 2 : 1;
             else
             {
                 int guess = Math.Max(Math.Max(parent, LowerBound(node.Id)), node.Depth);
@@ -230,7 +235,7 @@ namespace CLSR.Offline
     {
         public override string Name => "greedy-rescue";
         public override string Description =>
-            "Maximises today's expected rescues from branch reports and revealed counts (thresholds guessed = depth); ties use fewer points.";
+            "Maximises today's expected rescues from branch reports and revealed counts (unknown crossings estimated at one point on cumulative maps); ties use fewer points.";
         protected override double Value(Belief belief, List<Leg> plan, int used) =>
             belief.Score(plan).rescue - 0.001 * used;
     }
